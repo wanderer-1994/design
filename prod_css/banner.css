@@ -1,0 +1,86 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.banner {
+    height: 60vh;
+    width: 100%;
+    position: relative;
+    /* margin-top: 5px; */
+}
+
+.banner .slider_item {
+    width: 100%;
+    height: 100%;
+    background-position: center;
+    position: absolute;
+    opacity: 0;
+    transition: opacity ease-in 1s;
+}
+
+.banner .slider_item img {
+    width: 100%;
+    height: 100%;
+}
+
+.banner .slider_item.active {
+    opacity: 1;
+    transition: opacity ease-out 1s;
+    z-index: 10;
+}
+
+.banner img.next,
+.banner img.back{
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 50px;
+    z-index: 100;
+    color: white;
+    cursor: pointer;
+}
+
+.banner img.next {
+    right: 15px;
+}
+
+.banner img.back {
+    left: 15px;
+}
+
+.banner .tracker {
+    height: 30px;
+    width: 100%;
+    text-align: center;
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+}
+
+.banner .tracker .item {
+    width: 45px;
+    height: 5px;
+    border-radius: 3px;
+    display: inline-block;
+    margin: 5px;
+    background-color: gray;
+    cursor: pointer;
+    transition: background-color 1s ease-in-out,
+                width 0.5s ease-in-out;
+}
+
+.banner .tracker .item:hover {
+    background-color: rgb(177, 176, 176);
+    transition: background-color 0s;
+}
+
+.banner .tracker .item.active {
+    background-color: white;
+    width: 60px;
+    transition: background-color 1s ease-in-out,
+                width 0.5s ease-in-out;
+}

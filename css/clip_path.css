@@ -1,0 +1,59 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.content {
+    height: 30vh;
+    width: 100%;
+    background: linear-gradient(to bottom right, blue, green);
+    clip-path: polygon(10% 10%, 80% 0, 20% 100%, 90% 90%);
+}
+
+/* skew border */
+.container {
+    width: 200px;
+    height: 250px;
+    position: relative;
+    margin: auto;
+}
+
+.skew_border {
+    width: 200px;
+    height: 250px;
+    margin: auto;
+    background: white;
+    border-radius: 3px;
+    padding: 5px;
+}
+
+.skew_border::before {
+    content: "";
+    display: block;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 200px;
+    height: 250px;
+    background: linear-gradient(to bottom right, rgb(73, 177, 24), rgb(194, 27, 172));
+    transform: skew(0deg, 0deg);
+    z-index: -1;
+    transition: transform .1s linear;
+    border-radius: 3px;
+}
+
+.skew_border:hover::before {
+    transform: skew(2deg, 2deg);
+}
+
+.skew_border::after {
+    content: "";
+    display: block;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100px;
+    height: 250px;
+    background: #ababab80;
+}

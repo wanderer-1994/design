@@ -1,0 +1,119 @@
+.container {
+  width: 150px;
+  height: 150px;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  perspective: 1200px;
+  perspective-origin: 50% 50%;
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  transition: top 2s ease-in-out, left 2s ease-in-out;
+}
+
+.circle {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 50% 55%,
+    rgba(240, 245, 255, 0.9),
+    rgba(240, 245, 255, 0.9) 40%,
+    rgba(225, 238, 255, 0.8) 60%,
+    rgba(43, 130, 255, 0.4)
+  );
+}
+
+.circle:before {
+  content: "";
+  position: absolute;
+  top: 80px;
+  left: 50px;
+  width: 90%;
+  height: 90%;
+  border-radius: 100%;
+  transform: rotateZ(10deg);
+  filter: blur(0px);
+  z-index: 2;
+  background: black;
+  /* transform: translateX(31%) translateY(58%) rotateZ(168deg) rotateX(10deg); */
+  background: radial-gradient(
+    circle at 0% 0%,
+    rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255) 35%, rgba(255, 255, 255, 0) 40%
+  );
+}
+
+.circle:before {
+  content: "";
+  position: absolute;
+  top: 1%;
+  left: 5%;
+  width: 90%;
+  height: 90%;
+  border-radius: 100%;
+  filter: blur(5px);
+  z-index: 2;
+  filter: blur(0);
+  height: 80%;
+  width: 40%;
+  background: radial-gradient(
+    circle at 130% 130%,
+    rgba(255, 255, 255, 0) 0,
+    rgba(255, 255, 255, 0) 46%,
+    rgba(255, 255, 255, 0.8) 50%,
+    rgba(255, 255, 255, 0.8) 58%,
+    rgba(255, 255, 255, 0) 60%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: translateX(131%) translateY(58%) rotateZ(168deg) rotateX(10deg);
+}
+
+.circle:after {
+  content: "";
+  position: absolute;
+  display: none;
+  top: 5%;
+  left: 10%;
+  width: 80%;
+  height: 80%;
+  border-radius: 100%;
+  filter: blur(1px);
+  z-index: 2;
+  transform: rotateZ(-30deg);
+  display: block;
+  background: black;
+  background: radial-gradient(
+    circle at 50% 80%,
+    rgba(255, 255, 255, 0),
+    rgba(255, 255, 255, 0) 74%,
+    white 80%,
+    white 84%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+
+@keyframes roaming {
+  0% {
+    top: 60px;
+    left: 60px;
+  }
+  25% {
+    top: 90px;
+    left: 90px;
+  }
+  50% {
+    top: 120px;
+    left: 60px;
+  }
+  75% {
+    top: 90px;
+    left: 0px;
+  }
+  100% {
+    top: 60px;
+    left: 60px;
+  }
+}

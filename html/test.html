@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .box {
+            perspective: 150;
+            width: 150px;
+            height: 150px;
+            transform-style: preserve-3d;
+            position: absolute;
+            left: 40%;
+            top: 10%;
+            transform: rotateX(45deg) rotateY(45deg);
+            animation: rotate 8s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% {
+                transform: rotateX(45deg) rotateY(45deg);
+            }
+            100% {
+                transform: rotateX(405deg) rotateY(405deg);
+            }
+        }
+
+        .left {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform: rotateY(90deg);
+            left: -75px;
+        }
+
+        .right {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform: rotateY(90deg);
+            right: -75px;
+        }
+
+        .top {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform: rotateX(90deg);
+            top: -75px;
+        }
+
+        .bottom {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform: rotateX(90deg);
+            bottom: -75px;
+        }
+
+        .back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform: translateZ(-75px);
+        }
+
+        .front {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform: translateZ(75px);
+        }
+
+        .box > div {
+            text-align: center;
+            padding-left: 30%;
+            padding-top: 30%;
+            font-size: 30px;
+            box-sizing: border-box;
+            border: 1px solid purple;
+            background: rgb(143, 199, 199, 0.8);
+        }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <div class="left">1</div>
+        <div class="right">2</div>
+        <div class="bottom">3</div>
+        <div class="top">4</div>
+        <div class="back">5</div>
+        <div class="front">6</div>
+    </div>
+</body>
+</html>

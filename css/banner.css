@@ -1,0 +1,61 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.banner {
+    height: 100vh;
+    background: linear-gradient(to top left, rgb(255, 255, 255, 0.9), rgb(0, 0, 0, 1), rgb(0, 0, 0, 0.4));
+}
+
+.banner h2 {
+    font-family: "Dancing Script", cursive;
+    color: white;
+}
+
+.banner .wide {
+    animation: wide-floating 9s ease-in-out infinite;
+}
+
+.banner .narrow {
+    animation: narrow-floating 9s ease-in-out infinite;
+}
+
+.banner .tiny {
+    animation: tiny-floating 9s ease-in-out infinite;
+}
+
+@keyframes wide-floating {
+    0% {
+        padding-left: 0%;
+    }
+    50% {
+        padding-left: 50%;
+    }
+    100% {
+        padding-left: 0%;
+    }
+}
+@keyframes narrow-floating {
+    0% {
+        padding-left: 5%;
+    }
+    50% {
+        padding-left: 45%;
+    }
+    100% {
+        padding-left: 5%;
+    }
+}
+@keyframes tiny-floating {
+    0% {
+        padding-left: 10%;
+    }
+    50% {
+        padding-left: 40%;
+    }
+    100% {
+        padding-left: 10%;
+    }
+}

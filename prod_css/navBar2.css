@@ -1,0 +1,101 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.nav-bar {
+    width: 0px;
+    height: 0px;
+    background-color: #efefef;
+    position: absolute;
+    top: 90%;
+    left: 10%;
+    border-radius: 10px;
+    transition: all .4s ease-in-out;
+}
+
+.nav-bar.open {
+    top: 40px !important;
+    left: 40px !important;
+    width: calc(100% - 40px);
+    height: calc(100% - 40px);
+}
+
+.nav-bar.open::before {
+    content: "";
+    position: absolute;
+    width: calc(100% + 40px);
+    height: calc(100% + 40px);
+    top: -40px;
+    left: -40px;
+    background-color: #00000020;
+    z-index: -10;
+}
+
+.nav-bar .menu-icon {
+    width: 60px;
+    height: 60px;
+    background-color: #efefef;
+    border: 3px solid white;
+    border-radius: 50%;
+    position: absolute;
+    transform: translateX(0%) translateY(0%);
+    cursor: pointer;
+    transition: all .5s ease-in-out;
+}
+
+.nav-bar.open .menu-icon {
+    transform: translateX(-50%) translateY(-50%);
+}
+
+.nav-bar .menu-icon .burger {
+    position: absolute;
+    top: calc(50% - 10px);
+    left: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    height: 5px;
+    width: 60%;
+    border-radius: 3px;
+    margin-bottom: 5px;
+    background-color: #ababab;
+    transition: all .5s ease-in-out;
+}
+
+.nav-bar .menu-icon .burger::before {
+    content: "";
+    height: 5px;
+    width: 80%;
+    border-radius: 3px;
+    margin-bottom: 5px;
+    background-color: #ababab;
+    position: absolute;
+    transform: translateY(10px);
+    transition: all .5s ease-in-out;
+}
+
+.nav-bar .menu-icon .burger::after {
+    content: "";
+    height: 5px;
+    width: 60%;
+    border-radius: 3px;
+    margin-bottom: 5px;
+    background-color: #ababab;
+    position: absolute;
+    transform: translateY(20px);
+    transition: all .5s ease-in-out;
+}
+
+.nav-bar.open .menu-icon .burger {
+    top: 50%;
+    transform: translateX(-50%) translateY(-50%) rotateZ(45deg);
+}
+
+.nav-bar.open .menu-icon .burger::before {
+    background-color: #ffffff00;
+}
+
+.nav-bar.open .menu-icon .burger::after {
+    width: 100%;
+    transform: rotateZ(90deg);
+}

@@ -1,0 +1,30 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.prodList {
+    height: 100vh;
+    background-image: url(../prod_img/bgr/bgr_adagio.png);
+    background-size: cover;
+    font-size: 0px;
+}
+
+.prodList .prodBox {
+    width: calc(100%/5 - 10px);
+    margin: 5px;
+    height: 300px;
+    font-size: initial;
+    display: inline-block;
+    background-color: #e9edf0;
+    opacity: 0.9;
+    vertical-align: top;
+}
+
+.prodList .prodBox .prodName {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
