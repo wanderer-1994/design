@@ -1,49 +1,89 @@
 (($) => {
 
-    $.fn.draggable = function () {
+    $.fn.draggable = function ({ limitTop, limitBottom, limitLeft, limitRight }) {
         this.each(function () {
             let target = this;
+            $(window).on("resize.draggable", function (e) {
+                let coordinates = new Object();
+                coordinates.top = target.offsetTop;
+                coordinates.left = target.offsetLeft;
+                coordinates = recalculateCoordinates(coordinates, { limitTop, limitBottom, limitLeft, limitRight });
+                $(target).css("top", `${coordinates.top}px`);
+                $(target).css("left", `${coordinates.left}px`);
+            })
+            // For Mobile - ontouchmove event handles all
+            $(target).on("touchstart.draggable", function (e) {
+                e.preventDefault;
+                let transition = $(target).css("transition");
+                $(target).data("transition", transition);
+            });
+            $(target).on("touchend.draggable", function (e) {
+                let transition = $(target).data().transition;
+                $(target).css("transition", transition);
+                $(target).data("transition", "");
+            });
+            $(target).on("touchmove.draggable", function (e) {
+                e.preventDefault;
+                $(target).css("transition", "all 0s");
+                let coordinates = new Object();
+                coordinates.top = e.touches[0].clientY - 30;
+                coordinates.left = e.touches[0].clientX - 30;
+                coordinates = recalculateCoordinates(coordinates, { limitTop, limitBottom, limitLeft, limitRight });
+                $(target).css("top", `${coordinates.top}px`);
+                $(target).css("left", `${coordinates.left}px`);
+            })
+            // For Web - has no ondrag event or something like that
             $(target).on("mousedown.draggable", function (e) {
-                target.x_distance = target.offsetLeft - e.clientX;
-                target.y_distance = target.offsetTop - e.clientY;
-                dragMouseDown(e, target);
+                let x_distance = target.offsetLeft - e.clientX;
+                let y_distance = target.offsetTop - e.clientY;
+                e = e || window.event;
+                e.preventDefault();
+                // disable transition
+                let transition = $(target).css("transition");
+                $(target).css("transition", "all 0s");
+                // get the mouse cursor position at startup:
+                $(document).on("mouseup.draggable", () => {
+                    closeDragElement(target)
+                    $(target).css("transition", transition);
+                });
+                // call a function whenever the cursor moves:
+                $(document).on("mousemove.draggable", (e2) => {
+                    e2 = e2 || window.event;
+                    e2.preventDefault();
+                    let coordinates = new Object();
+                    coordinates.top = e2.clientY + y_distance;
+                    coordinates.left = e2.clientX + x_distance;
+                    coordinates = recalculateCoordinates(coordinates, { limitTop, limitBottom, limitLeft, limitRight });
+                    $(target).css("top", `${coordinates.top}px`);
+                    $(target).css("left", `${coordinates.left}px`);
+                });
             })
         })
     }
 
-    function dragMouseDown(e, target) {
-        e = e || window.event;
-        e.preventDefault();
-        // disable transition
-        let transition = $(target).css("transition");
-        $(target).css("transition", "all 0s");
-        // get the mouse cursor position at startup:
-        $(target).on("mouseup.draggable", () => {
-            closeDragElement(target, transition)
-        });
-        $(target).on("mouseleave.draggable", () => {
-            closeDragElement(target, transition)
-        });
-        // call a function whenever the cursor moves:
-        $(target).on("mousemove.draggable", (e) => {
-            elementDrag(e, target);
-        });
+    function recalculateCoordinates ({ top, left }, { limitTop, limitBottom, limitLeft, limitRight }) {
+        if (typeof(limitTop) == "function") limitTop = limitTop();
+        if (typeof(limitBottom) == "function") limitBottom = limitBottom();
+        if (typeof(limitLeft) == "function") limitLeft = limitLeft();
+        if (typeof(limitRight) == "function") limitRight = limitRight();
+        if (typeof(limitTop) == "number") {
+            top = Math.max(top, limitTop);
+        }
+        if (typeof(limitBottom) == "number") {
+            top = Math.min(top, limitBottom);
+        }
+        if (typeof(limitLeft) == "number") {
+            left = Math.max(left, limitLeft);
+        }
+        if (typeof(limitRight) == "number") {
+            left = Math.min(left, limitRight);
+        }
+        return { top, left };
     }
 
-    function closeDragElement(target, transition) {
-        $(target).off("mouseup.draggable");
-        $(target).off("mousemove.draggable");
-        $(target).off("mouseleave.draggable");
-        $(target).css("transition", transition);
-    }
-
-    function elementDrag(e, target) {
-        e = e || window.event;
-        e.preventDefault();
-        let top = e.clientY + target.y_distance;
-        let left = e.clientX + target.y_distance;
-        $(target).css("top", `${top}px`);
-        $(target).css("left", `${left}px`);
+    function closeDragElement(target) {
+        $(document).off("mouseup.draggable");
+        $(document).off("mousemove.draggable");
     }
 
 })(jQuery);
