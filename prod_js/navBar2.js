@@ -18,7 +18,10 @@ $(document).ready(() => {
         }
     }
 
-    $(".nav-bar").draggable({ limitTop: 0, limitBottom: windowHeight, limitLeft: 0, limitRight: windowWidth });
+    $(".nav-bar").draggable({ limitTop: 0, limitBottom: windowHeight, limitLeft: 0, limitRight: windowWidth }, function () {
+        return !$(".nav-bar").hasClass("open");
+    });
+    
     $(document).onClickNonDrag({allowX: 5, allowY: 5}, (e) => {
         let $navBar = $(".nav-bar");
         if($(".nav-bar .menu-icon:hover").length > 0) {
@@ -30,6 +33,4 @@ $(document).ready(() => {
             }
         }
     });
-
-    $(".filter").draggable({ limitTop: 0, limitBottom: windowHeight, limitLeft: 0, limitRight: windowWidth });
 })

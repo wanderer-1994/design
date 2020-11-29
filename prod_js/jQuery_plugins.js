@@ -1,6 +1,6 @@
 (($) => {
 
-    $.fn.draggable = function ({ limitTop, limitBottom, limitLeft, limitRight }) {
+    $.fn.draggable = function ({ limitTop, limitBottom, limitLeft, limitRight }, f_dragWhen) {
         this.each(function () {
             let target = this;
             $(window).on("resize.draggable", function (e) {
@@ -24,6 +24,9 @@
             });
             $(target).on("touchmove.draggable", function (e) {
                 e.preventDefault;
+                if(typeof(f_dragWhen) == "function" && !f_dragWhen()) {
+                    return;
+                }
                 $(target).css("transition", "all 0s");
                 let coordinates = new Object();
                 coordinates.top = e.touches[0].clientY - 30;
@@ -34,6 +37,9 @@
             })
             // For Web - has no ondrag event or something like that
             $(target).on("mousedown.draggable", function (e) {
+                if(typeof(f_dragWhen) == "function" && !f_dragWhen()) {
+                    return;
+                }
                 let x_distance = target.offsetLeft - e.clientX;
                 let y_distance = target.offsetTop - e.clientY;
                 e = e || window.event;
