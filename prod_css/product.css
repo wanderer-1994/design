@@ -1,0 +1,27 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.bgsweep {
+    background: linear-gradient(
+        -45deg,
+        #9a9a9a90 45%,
+        #cdcdcd 50%,
+        #9a9a9a90 55%,
+        #9a9a9a90 100%
+    );
+    background-size: 350%;
+    background-position: 0%;
+    animation: bgsweep 1s infinite;
+}
+
+@keyframes bgsweep {
+    0% {
+        background-position: 100%;
+    }
+    100% {
+        background-position: 0%;
+    }
+}

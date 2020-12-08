@@ -1,0 +1,126 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: sans-serif;
+}
+
+body {
+    height: 200vh;
+}
+
+.category {
+    
+}
+
+.category .cat-banner {
+    position: relative;
+    user-select: none;
+}
+
+.category .cat-banner .cat-title {
+    background-color: #171936;
+    color: #dedede;
+    font-family: sans-serif;
+    font-size: 30px;
+}
+
+.category .cat-banner .cat-description {
+    background-color: #171936;
+    color: #ffffff90;
+    padding-bottom: 150px;
+}
+
+.category .cat-banner .cat-image {
+    margin-top: -120px;
+    margin-left: 5px;
+    width: calc(100% - 10px);
+}
+
+.category .cat-banner .cat-image img {
+    border-radius: 30px 5px 30px 5px;
+    max-width: 100%;
+    max-height: 100%;
+    min-height: 200px;
+    box-shadow: 0px 0px 10px #a4a4a4;
+    pointer-events: none;
+}
+
+.prod-list {
+    padding-left: 5px;
+    margin-top: 10px;
+}
+
+.prod-list .prod-box {
+    display: inline-block;
+    margin-left: 0px;
+    margin-right: 5px;
+    margin-bottom: 8px;
+    width: calc((100% - 15px)/2);
+    box-shadow: 0px 0px 5px #cdcdcd;
+    vertical-align: top;
+    cursor: pointer;
+}
+
+.prod-list .prod-box .prod-image {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+    user-select: none;
+}
+
+.prod-list .prod-box .prod-image img {
+    height: 100%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+.prod-list .prod-box .prod-name {
+    margin-top: 5px;
+    min-height: 20px;
+    padding: 0px 5px 0px 5px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.prod-list .prod-box .price {
+    padding: 0px 5px 0px 5px;
+    margin-top: 5px;
+    min-height: 20px;
+    color: #ee4d2d;
+    padding-bottom: 10px;
+}
+
+.prod-list .prod-box .price .old {
+    color: #454545;
+    margin-right: 5px;
+    text-decoration: line-through;
+    font-size: 15px;
+}
+
+.bgsweep {
+    background: linear-gradient(
+        -45deg,
+        #9a9a9a90 45%,
+        #cdcdcd 50%,
+        #9a9a9a90 55%,
+        #9a9a9a90 100%
+    );
+    background-size: 350%;
+    background-position: 0%;
+    animation: bgsweep 1s infinite;
+}
+
+@keyframes bgsweep {
+    0% {
+        background-position: 100%;
+    }
+    100% {
+        background-position: 0%;
+    }
+}
