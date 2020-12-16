@@ -1,0 +1,66 @@
+CREATE schema `ecommerce`;
+
+###
+CREATE TABLE `ecommerce`.`product_entity` (
+  `entity_id` VARCHAR(15) NOT NULL,
+  `type_id` ENUM('simple', 'master', 'variant', 'grouped', 'bundle') NULL DEFAULT 'simple',
+  `parent` VARCHAR(15) NULL,
+  `created_at` DATETIME NULL,
+  `updated_at` DATETIME NULL,
+  PRIMARY KEY (`entity_id`));
+
+###
+CREATE TABLE `ecommerce`.`product_category_assignment` (
+  `product_id` VARCHAR(15) NOT NULL,
+  `category_id` VARCHAR(15) NOT NULL,
+  PRIMARY KEY (`product_id`, `category_id`));
+
+###
+CREATE TABLE `ecommerce`.`product_eav` (
+  `attribute_id` VARCHAR(15) NOT NULL,
+  `label` VARCHAR(15) UNIQUE NOT NULL,
+  `html_type` ENUM('select', 'input', 'textarea', 'multiselect', 'boolean') DEFAULT NULL,
+  `data_type` ENUM('int', 'decimal', 'vachar', 'text', 'datetime') DEFAULT NULL,
+  PRIMARY KEY (`attribute_id`));
+
+###
+CREATE TABLE `ecommerce`.`product_eav_option` (
+  `attribute_id` VARCHAR(15) NOT NULL,
+  `value` VARCHAR(50) NOT NULL,
+  `sort_order`  INT NULL,
+  PRIMARY KEY (`attribute_id`, `value`));
+
+###
+CREATE TABLE `ecommerce`.`product_eav_int` (
+  `entity_id` VARCHAR(15) NOT NULL,
+  `attribute_id` VARCHAR(15) NOT NULL,
+  `value`  INT NOT NULL,
+  PRIMARY KEY (`entity_id`, `attribute_id`));
+
+###
+CREATE TABLE `ecommerce`.`product_eav_decimal` (
+  `entity_id` VARCHAR(15) NOT NULL,
+  `attribute_id` VARCHAR(15) NOT NULL,
+  `value`  DECIMAL(20,6) NOT NULL,
+  PRIMARY KEY (`entity_id`, `attribute_id`));
+
+###
+CREATE TABLE `ecommerce`.`product_eav_varchar` (
+  `entity_id` VARCHAR(15) NOT NULL,
+  `attribute_id` VARCHAR(15) NOT NULL,
+  `value`  VARCHAR(255) NOT NULL,
+  PRIMARY KEY (`entity_id`, `attribute_id`));
+
+###
+CREATE TABLE `ecommerce`.`product_eav_text` (
+  `entity_id` VARCHAR(15) NOT NULL,
+  `attribute_id` VARCHAR(15) NOT NULL,
+  `value`  TEXT NOT NULL,
+  PRIMARY KEY (`entity_id`, `attribute_id`));
+
+###
+CREATE TABLE `ecommerce`.`product_eav_datetime` (
+  `entity_id` VARCHAR(15) NOT NULL,
+  `attribute_id` VARCHAR(15) NOT NULL,
+  `value`  DATETIME NOT NULL,
+  PRIMARY KEY (`entity_id`, `attribute_id`));
