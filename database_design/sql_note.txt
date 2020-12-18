@@ -1,3 +1,9 @@
 ###NOTE
 SHOW INDEX FROM yourDatebaseName.yourTableName WHERE Key_name = 'PRIMARY';
+
+###
 SHOW COLUMNS FROM `product_eav` LIKE 'html_type'
+
+###
+ALTER TABLE `ecommerce`.`product_eav_option` 
+CHANGE COLUMN `value` `value` VARCHAR(25) NOT NULL ;
