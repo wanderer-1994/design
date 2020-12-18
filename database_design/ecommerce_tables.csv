@@ -25,7 +25,7 @@ column	attribute_id	label	html_type	data_type	validation
 primary key	yes				
 data type	varchar(15)	varchar(50)	enum of string	enum of string	
 not null	yes	yes	yes	yes	yes
-enum values			"select, input, textarea, multiselect, boolean"	"int, decimal, varchar, text, datetime"	
+enum values			"input, multiinput, select, multiselect, boolean, password, html"	"int, decimal, varchar, text, datetime"	
 unique		yes			
 default			input	varchar	
 autoincrement					
