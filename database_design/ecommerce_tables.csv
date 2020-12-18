@@ -1,0 +1,108 @@
+TABLE	product_entity				
+column	entity_id	type_id	parent	created_at	updated_at
+primary key	yes				
+data type	varchar(15)	enum of varchar	varchar(15)	datetime	datetime
+not null	yes				
+enum values		"simple, master, variant, grouped, bundle"			
+unique					
+default		simple			
+autoincrement					
+					
+					
+TABLE	product_category_assignment				
+column	product_id	category_id			
+primary key	yes	yes			
+data type	varchar(15)	varchar(15)			
+not null	yes	yes			
+enum values					
+unique					
+default					
+autoincrement					
+					
+					
+TABLE	product_eav				
+column	attribute_id	label	html_type	data_type	validation
+primary key	yes				
+data type	varchar(15)	varchar(50)	enum of string	enum of string	
+not null	yes	yes	yes	yes	yes
+enum values			"select, input, textarea, multiselect, boolean"	"int, decimal, varchar, text, datetime"	
+unique		yes			
+default			input	varchar	
+autoincrement					
+					
+					
+TABLE	product_eav_option				
+column	option_id	attribute_id	sort_order	value	
+primary key	yes	yes			
+data type	int	varchar(15)	int	varchar(255)	
+not null	yes	yes		yes	
+enum values					
+unique					
+default					
+autoincrement	yes				
+					
+					
+TABLE	product_eav_option				
+column	option_id	attribute_id	sort_order	value	
+primary key	yes	yes			
+data type	int	varchar(15)	int	varchar(255)	
+not null	yes	yes		yes	
+enum values					
+unique					
+default					
+autoincrement	yes				
+					
+					
+TABLE	product_eav_int				
+column	entity_id	attribute_id	value		
+primary key	yes	yes			
+data type	varchar(15)	varchar(15)	int		
+not null	yes	yes	yes		
+enum values					
+unique					
+default					
+autoincrement					
+					
+					
+TABLE	product_eav_decimal				
+column	entity_id	attribute_id	value		
+primary key	yes	yes			
+data type	varchar(15)	varchar(15)	"decimal(20,6)"		
+not null	yes	yes	yes		
+enum values					
+unique					
+default					
+autoincrement					
+					
+					
+TABLE	product_eav_varchar				
+column	entity_id	attribute_id	value		
+primary key	yes	yes			
+data type	varchar(15)	varchar(15)	varchar(255)		
+not null	yes	yes	yes		
+enum values					
+unique					
+default					
+autoincrement					
+					
+					
+TABLE	product_eav_text				
+column	entity_id	attribute_id	value		
+primary key	yes	yes			
+data type	varchar(15)	varchar(15)	text		
+not null	yes	yes	yes		
+enum values					
+unique					
+default					
+autoincrement					
+					
+					
+TABLE	product_eav_datetime				
+column	entity_id	attribute_id	value		
+primary key	yes	yes			
+data type	varchar(15)	varchar(15)	datetime		
+not null	yes	yes	yes		
+enum values					
+unique					
+default					
+autoincrement					
