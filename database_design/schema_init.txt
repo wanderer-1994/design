@@ -21,6 +21,8 @@ CREATE TABLE `ecommerce`.`product_eav` (
   `label` VARCHAR(15) UNIQUE NOT NULL,
   `html_type` ENUM('select', 'input', 'textarea', 'multiselect', 'boolean') NULL DEFAULT 'input',
   `data_type` ENUM('int', 'decimal', 'varchar', 'text', 'datetime') NULL DEFAULT 'varchar',
+  `validation` VARCHAR(15) NOT NULL,
+  `is_super` ENUM('0', '1') NULL DEFAULT '0',
   PRIMARY KEY (`attribute_id`));
 
 ###
