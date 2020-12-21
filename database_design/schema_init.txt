@@ -21,14 +21,27 @@ CREATE TABLE `ecommerce`.`product_eav` (
   `label` VARCHAR(15) UNIQUE NOT NULL,
   `html_type` ENUM('input', 'multiinput', 'select', 'multiselect', 'boolean', 'password') NULL DEFAULT 'input',
   `data_type` ENUM('int', 'decimal', 'varchar', 'text', 'datetime') NULL DEFAULT 'varchar',
+  `validation` VARCHAR(15) NOT NULL,
+  `is_super` ENUM('0', '1') NULL DEFAULT '0',
   PRIMARY KEY (`attribute_id`));
 
 ###
 CREATE TABLE `ecommerce`.`product_eav_option` (
+  `option_id` INT NOT NULL AUTO_INCREMENT,
   `attribute_id` VARCHAR(15) NOT NULL,
-  `value` VARCHAR(50) NOT NULL,
+  `value` VARCHAR(255) NOT NULL,
   `sort_order`  INT NULL,
-  PRIMARY KEY (`attribute_id`, `value`));
+  PRIMARY KEY (`option_id`, `attribute_id`));
+
+###
+CREATE TABLE `ecommerce`.`product_eav_multiinput_value` (
+  `record_id` INT NOT NULL AUTO_INCREMENT,
+  `entity_id` VARCHAR(15) NOT NULL,
+  `attribute_id` VARCHAR(15) NOT NULL,
+  `value` VARCHAR(255) NOT NULL,
+  `sort_order`  INT NULL,
+  PRIMARY KEY (`record_id`));
+
 
 ###
 CREATE TABLE `ecommerce`.`product_eav_int` (
