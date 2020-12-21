@@ -19,7 +19,7 @@ CREATE TABLE `ecommerce`.`product_category_assignment` (
 CREATE TABLE `ecommerce`.`product_eav` (
   `attribute_id` VARCHAR(15) NOT NULL,
   `label` VARCHAR(15) UNIQUE NOT NULL,
-  `html_type` ENUM('select', 'input', 'textarea', 'multiselect', 'boolean') NULL DEFAULT 'input',
+  `html_type` ENUM('input', 'multiinput', 'select', 'multiselect', 'boolean', 'password') NULL DEFAULT 'input',
   `data_type` ENUM('int', 'decimal', 'varchar', 'text', 'datetime') NULL DEFAULT 'varchar',
   `validation` VARCHAR(15) NOT NULL,
   `is_super` ENUM('0', '1') NULL DEFAULT '0',
