@@ -1,0 +1,5 @@
+INSERT INTO `ecommerce`.product_entity (entity_id, type_id, parent, created_at, updated_at) VALUES
+(),
+(),
+(),
+()
