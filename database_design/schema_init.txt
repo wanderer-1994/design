@@ -5,8 +5,8 @@ CREATE TABLE `ecommerce`.`product_entity` (
   `entity_id` VARCHAR(15) NOT NULL,
   `type_id` ENUM('simple', 'master', 'variant', 'grouped', 'bundle') NULL DEFAULT 'simple',
   `parent` VARCHAR(15) NULL,
-  `created_at` DATETIME NULL,
-  `updated_at` DATETIME NULL,
+  `created_at` BIGINT(15) NULL,
+  `updated_at` BIGINT(15) NULL,
   PRIMARY KEY (`entity_id`));
 
 ###
@@ -74,5 +74,5 @@ CREATE TABLE `ecommerce`.`product_eav_text` (
 CREATE TABLE `ecommerce`.`product_eav_datetime` (
   `entity_id` VARCHAR(15) NOT NULL,
   `attribute_id` VARCHAR(15) NOT NULL,
-  `value`  DATETIME NOT NULL,
+  `value`  BIGINT(15) NOT NULL,
   PRIMARY KEY (`entity_id`, `attribute_id`));
