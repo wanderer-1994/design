@@ -2,77 +2,78 @@ CREATE schema `ecommerce`;
 
 ###
 CREATE TABLE `ecommerce`.`product_entity` (
-  `entity_id` VARCHAR(15) NOT NULL,
+  `entity_id` VARCHAR(50) NOT NULL,
   `type_id` ENUM('simple', 'master', 'variant', 'grouped', 'bundle') NULL DEFAULT 'simple',
-  `parent` VARCHAR(15) NULL,
+  `parent` VARCHAR(50) NULL,
   `created_at` BIGINT(15) NULL,
   `updated_at` BIGINT(15) NULL,
   PRIMARY KEY (`entity_id`));
 
 ###
 CREATE TABLE `ecommerce`.`product_category_assignment` (
-  `product_id` VARCHAR(15) NOT NULL,
-  `category_id` VARCHAR(15) NOT NULL,
+  `product_id` VARCHAR(50) NOT NULL,
+  `category_id` VARCHAR(50) NOT NULL,
   PRIMARY KEY (`product_id`, `category_id`));
 
 ###
 CREATE TABLE `ecommerce`.`product_eav` (
-  `attribute_id` VARCHAR(15) NOT NULL,
-  `label` VARCHAR(15) UNIQUE NOT NULL,
+  `attribute_id` VARCHAR(50) NOT NULL,
+  `label` VARCHAR(50) UNIQUE NOT NULL,
   `html_type` ENUM('input', 'multiinput', 'select', 'multiselect', 'boolean', 'password') NULL DEFAULT 'input',
-  `data_type` ENUM('int', 'decimal', 'varchar', 'text', 'datetime') NULL DEFAULT 'varchar',
-  `validation` VARCHAR(15) NOT NULL,
+  `data_type` ENUM('int', 'decimal', 'varchar', 'text', 'html' 'datetime') NULL DEFAULT 'varchar',
+  `validation` VARCHAR(255) NOT NULL,
   `is_super` ENUM('0', '1') NULL DEFAULT '0',
   `is_system` ENUM('0', '1') NULL DEFAULT '0',
+  `unit` VARCHAR(50) NULL,
   PRIMARY KEY (`attribute_id`));
 
 ###
 CREATE TABLE `ecommerce`.`product_eav_option` (
   `option_id` INT NOT NULL AUTO_INCREMENT,
-  `attribute_id` VARCHAR(15) NOT NULL,
+  `attribute_id` VARCHAR(50) NOT NULL,
   `value` VARCHAR(255) NOT NULL,
   `sort_order`  INT NULL,
   PRIMARY KEY (`option_id`, `attribute_id`));
 
 ###
 CREATE TABLE `ecommerce`.`product_eav_multiinput_value` (
-  `entity_id` VARCHAR(15) NOT NULL,
-  `attribute_id` VARCHAR(15) NOT NULL,
+  `entity_id` VARCHAR(50) NOT NULL,
+  `attribute_id` VARCHAR(50) NOT NULL,
   `value` VARCHAR(255) NOT NULL,
   `sort_order`  INT NULL);
 
 
 ###
 CREATE TABLE `ecommerce`.`product_eav_int` (
-  `entity_id` VARCHAR(15) NOT NULL,
-  `attribute_id` VARCHAR(15) NOT NULL,
+  `entity_id` VARCHAR(50) NOT NULL,
+  `attribute_id` VARCHAR(50) NOT NULL,
   `value`  INT NOT NULL,
   PRIMARY KEY (`entity_id`, `attribute_id`));
 
 ###
 CREATE TABLE `ecommerce`.`product_eav_decimal` (
-  `entity_id` VARCHAR(15) NOT NULL,
-  `attribute_id` VARCHAR(15) NOT NULL,
+  `entity_id` VARCHAR(50) NOT NULL,
+  `attribute_id` VARCHAR(50) NOT NULL,
   `value`  DECIMAL(20,6) NOT NULL,
   PRIMARY KEY (`entity_id`, `attribute_id`));
 
 ###
 CREATE TABLE `ecommerce`.`product_eav_varchar` (
-  `entity_id` VARCHAR(15) NOT NULL,
-  `attribute_id` VARCHAR(15) NOT NULL,
+  `entity_id` VARCHAR(50) NOT NULL,
+  `attribute_id` VARCHAR(50) NOT NULL,
   `value`  VARCHAR(255) NOT NULL,
   PRIMARY KEY (`entity_id`, `attribute_id`));
 
 ###
 CREATE TABLE `ecommerce`.`product_eav_text` (
-  `entity_id` VARCHAR(15) NOT NULL,
-  `attribute_id` VARCHAR(15) NOT NULL,
+  `entity_id` VARCHAR(50) NOT NULL,
+  `attribute_id` VARCHAR(50) NOT NULL,
   `value`  TEXT NOT NULL,
   PRIMARY KEY (`entity_id`, `attribute_id`));
 
 ###
 CREATE TABLE `ecommerce`.`product_eav_datetime` (
-  `entity_id` VARCHAR(15) NOT NULL,
-  `attribute_id` VARCHAR(15) NOT NULL,
+  `entity_id` VARCHAR(50) NOT NULL,
+  `attribute_id` VARCHAR(50) NOT NULL,
   `value`  BIGINT(15) NOT NULL,
   PRIMARY KEY (`entity_id`, `attribute_id`));
