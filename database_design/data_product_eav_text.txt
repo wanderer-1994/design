@@ -3,6 +3,7 @@ INSERT INTO `ecommerce`.product_eav_text
 VALUES
 ### General
 ('description', 'PR001', 'PR001 is a great earbud for outside exercise. It\'s light weight and having sporty outlook'),
+('description', 'PR002', 'PR002 is \"just\" the right <sup>&copy;</sup>Skullcandy'),
 ('short_description', 'PR001', 'PR001 is a great earbud for outside exercise. It\'s light weight and having sporty outlook'),
 ### Sạc dự phòng
 ('spec_description', 'PR001', '<div style=\"white-space: pre-wrap;\" class=\"myclass\">Thời gian giao hàng dự kiến cho sản phẩm này là từ 7-9 ngày

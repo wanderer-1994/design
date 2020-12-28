@@ -12,4 +12,4 @@ VALUES
 ('color', 'PR003', 'Đỏ_#eb3458'),
 ('color', 'PR004', 'Lam_#eb3458'),
 ('color', 'PR005', 'Cam_#ebb434'),
-('thumbnail', 'PR001', 'images/thumb/PR001.jpg'),
+('thumbnail', 'PR001', 'images/thumb/PR001.jpg')

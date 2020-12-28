@@ -37,6 +37,13 @@ SELECT `pe`.entity_id, `pe`.product_id, `pe`.value, `attributes`.*  FROM (
     FROM `ecommerce`.product_entity as `pe`
     LEFT JOIN `ecommerce`.product_eav_datetime as `eav` ON `eav`.entity_id = `pe`.entity_id
     WHERE `pe`.entity_id in ('PR001', 'PR002') or `pe`.parent in ('PR001', 'PR002')
+    UNION
+    SELECT
+        `pe`.entity_id, IF((`pe`.parent is not null and `pe`.parent != ''), `pe`.parent, `pe`.entity_id) as product_id,
+        `eav`.attribute_id, `eav`.value
+    FROM `ecommerce`.product_entity as `pe`
+    LEFT JOIN `ecommerce`.product_eav_multi_value as `eav` ON `eav`.entity_id = `pe`.entity_id
+    WHERE `pe`.entity_id in ('PR001', 'PR002') or `pe`.parent in ('PR001', 'PR002')
 ) as `pe`
 LEFT JOIN `ecommerce`.product_eav as `attributes` ON `attributes`.attribute_id = `pe`.attribute_id
 ORDER BY `pe`.product_id, `pe`.entity_id
