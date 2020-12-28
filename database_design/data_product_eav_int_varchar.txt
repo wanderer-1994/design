@@ -1,8 +1,8 @@
-INSERT INTO `ecommerce`.product_eav
-(attribute_id, label, html_type, data_type, validation, is_super, is_system, unit)
+INSERT INTO `ecommerce`.product_eav_varchar
+(attribute_id, entity_id, value)
 VALUES
 ### General
-('name', 'Tên', 'input', 'varchar', '', '1', '1', null),
+('name', 'PR001', 'Earbud &copy; Skull Candy'),
 ('brand', 'Thương hiệu', 'select', 'varchar', '', '1', '1', null),
 ('compatible', 'Tương thích', 'multiselect', 'varchar', '', '1', '1', null),
 ('color', 'Màu', 'select', 'varchar', '', '1', '1', null),
