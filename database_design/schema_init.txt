@@ -36,10 +36,10 @@ CREATE TABLE `ecommerce`.`product_eav_option` (
   PRIMARY KEY (`option_id`, `attribute_id`));
 
 ###
-CREATE TABLE `ecommerce`.`product_eav_multiinput_value` (
+CREATE TABLE `ecommerce`.`product_eav_multi_value` (
   `entity_id` VARCHAR(50) NOT NULL,
   `attribute_id` VARCHAR(50) NOT NULL,
-  `value` VARCHAR(255) NOT NULL,
+  `value` TEXT NOT NULL,
   `sort_order`  INT NULL);
 
 
