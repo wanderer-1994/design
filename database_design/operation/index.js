@@ -117,12 +117,15 @@ async function processingProductsData () {
     try {
         let rawData = await selectM24MassiveData();
         console.log(rawData.length);
+        let start = Date.now();
         let products = mysqlutil.groupByAttribute({
             rawData: rawData,
             groupBy: "product_id"
         });
         products.forEach(product => {
-            product.type_id = product.__items.find(line_item => line_item.entity_id == product.product_id).type_id;
+            let self = product.__items.find(line_item => line_item.entity_id == product.product_id);
+            if(!self) return;
+            product.type_id = self.type_id;
             product.__items = mysqlutil.groupByAttribute({
                 rawData: product.__items,
                 groupBy: "entity_id"
@@ -170,7 +173,9 @@ async function processingProductsData () {
             });
             delete product.__items;
         })
-        await fs.writeJSON("../test2.json", products);
+        let end = Date.now();
+        console.log("product processing took: ", end - start, " ms");
+        // await fs.writeJSON("../test2.json", products);
         console.log(products.length);
     } catch (error) {
         throw error;
