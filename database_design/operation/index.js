@@ -1,6 +1,22 @@
 const mysqlutil = require("./utils/mysql");
 const fs = require("fs-extra");
 
+const productSelectedFields = [
+    "attribute_code",
+    "product_id",
+    "entity_id",
+    "sku",
+    "type_id",
+    "attribute_id",
+    "value",
+    "frontend_input",
+    "frontend_label"
+];
+const productInheritFields = ["product_id", "type_id"];
+const productEntityInheritFields = ["product_id", "entity_id", "sku", "type_id"];
+const attributeInheritFields = ["attribute_code", "attribute_id", "value", "frontend_input", "frontend_label"];
+const multivalueAttributes = ["multiselect", "multiinput"];
+
 var executes = [
     'schema_init.txt',
     'data_product_eav.txt',
@@ -58,37 +74,37 @@ async function selectM24MassiveData () {
             FROM \`catalog_product_entity\` as \`p\`
             LEFT JOIN \`catalog_product_super_link\` as \`splk\` ON \`splk\`.product_id = \`p\`.entity_id
             INNER JOIN \`catalog_product_entity_varchar\` as \`varchar\` ON \`varchar\`.entity_id = \`p\`.entity_id
-            WHERE \`p\`.entity_id BETWEEN 2020 AND 3000
+            WHERE \`p\`.entity_id BETWEEN 1 AND 3000
         UNION
             SELECT IF(\`splk\`.parent_id IS NOT NULL, \`splk\`.parent_id, \`p\`.entity_id) as product_id, \`p\`.entity_id, \`p\`.sku, \`p\`.type_id, \`text\`.attribute_id, \`text\`.value
             FROM \`catalog_product_entity\` as \`p\`
             LEFT JOIN \`catalog_product_super_link\` as \`splk\` ON \`splk\`.product_id = \`p\`.entity_id
             INNER JOIN \`catalog_product_entity_text\` as \`text\` ON \`text\`.entity_id = \`p\`.entity_id
-            WHERE \`p\`.entity_id BETWEEN 2020 AND 3000
+            WHERE \`p\`.entity_id BETWEEN 1 AND 3000
         UNION
             SELECT IF(\`splk\`.parent_id IS NOT NULL, \`splk\`.parent_id, \`p\`.entity_id) as product_id, \`p\`.entity_id, \`p\`.sku, \`p\`.type_id, \`int\`.attribute_id, \`int\`.value
             FROM \`catalog_product_entity\` as \`p\`
             LEFT JOIN \`catalog_product_super_link\` as \`splk\` ON \`splk\`.product_id = \`p\`.entity_id
             INNER JOIN \`catalog_product_entity_int\` as \`int\` ON \`int\`.entity_id = \`p\`.entity_id
-            WHERE \`p\`.entity_id BETWEEN 2020 AND 3000
+            WHERE \`p\`.entity_id BETWEEN 1 AND 3000
         UNION
             SELECT IF(\`splk\`.parent_id IS NOT NULL, \`splk\`.parent_id, \`p\`.entity_id) as product_id, \`p\`.entity_id, \`p\`.sku, \`p\`.type_id, \`decimal\`.attribute_id, \`decimal\`.value
             FROM \`catalog_product_entity\` as \`p\`
             LEFT JOIN \`catalog_product_super_link\` as \`splk\` ON \`splk\`.product_id = \`p\`.entity_id
             INNER JOIN \`catalog_product_entity_decimal\` as \`decimal\` ON \`decimal\`.entity_id = \`p\`.entity_id
-            WHERE \`p\`.entity_id BETWEEN 2020 AND 3000
+            WHERE \`p\`.entity_id BETWEEN 1 AND 3000
         UNION
             SELECT IF(\`splk\`.parent_id IS NOT NULL, \`splk\`.parent_id, \`p\`.entity_id) as product_id, \`p\`.entity_id, \`p\`.sku, \`p\`.type_id, \`datetime\`.attribute_id, \`datetime\`.value
             FROM \`catalog_product_entity\` as \`p\`
             LEFT JOIN \`catalog_product_super_link\` as \`splk\` ON \`splk\`.product_id = \`p\`.entity_id
             INNER JOIN \`catalog_product_entity_datetime\` as \`datetime\` ON \`datetime\`.entity_id = \`p\`.entity_id
-            WHERE \`p\`.entity_id BETWEEN 2020 AND 3000
+            WHERE \`p\`.entity_id BETWEEN 1 AND 3000
         ) AS \`pre\`
         INNER JOIN \`eav_attribute\` as \`eav\` ON \`pre\`.attribute_id=\`eav\`.attribute_id ORDER BY \`pre\`.entity_id ASC`;
         let start = Date.now();
         let result = await M24.promiseQuery(query);
         let end = Date.now();
-        // console.log("query took: ", end - start, " ms");
+        console.log("query took: ", end - start, " ms");
         // await fs.writeJSON("../test.json", result);
         M24.end();
         return result;
@@ -112,7 +128,7 @@ async function processingProductsData () {
                 groupBy: "entity_id"
             });
             switch (product.type_id) {
-                case "simple":
+                case "simple": case "bundle": case "grouped": case "downloadable":
                     product.self = product.__items.find(line_item => line_item.entity_id == product.product_id);
                     break;
                 case "configurable":
@@ -123,18 +139,36 @@ async function processingProductsData () {
                     break;
             };
             product.__items.forEach(product_entity => {
+                if(product_entity.__items[0]){
+                    productEntityInheritFields.forEach(field_item => {
+                        product_entity[field_item] = product_entity.__items[0][field_item] || product_entity[field_item];
+                    })
+                }
                 product_entity.attributes = mysqlutil.groupByAttribute({
                     rawData: product_entity.__items,
                     groupBy: "attribute_code",
                     nullExcept: [null, ""]
                 });
                 product_entity.attributes.forEach(attr_item => {
-                    if(attr_item[0]){
-                        let keys = Object.keys(attr_item[0]);
-                        keys
+                    if(attr_item.__items[0]){
+                        if("__items" in attr_item.__items[0]){
+                            throw new Error("Invalid property name \"__item\". \"__item\" is framework preserved key.")
+                        }
+                        attributeInheritFields.forEach(field_item => {
+                            attr_item[field_item] = attr_item.__items[0][field_item] || attr_item[field_item];
+                        })
                     }
-                })
-            })
+                    if(multivalueAttributes.indexOf(attr_item.frontend_input) != -1){
+                        attr_item.value = [];
+                        attr_item.__items.forEach(value_item => {
+                            attr_item.value.push(value_item.value);
+                        })
+                    }
+                    delete attr_item.__items;
+                });
+                delete product_entity.__items;
+            });
+            delete product.__items;
         })
         await fs.writeJSON("../test2.json", products);
         console.log(products.length);
