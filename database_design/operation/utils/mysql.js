@@ -41,16 +41,16 @@ function groupByAttribute ({rawData, groupBy, nullExcept}) {
     rawData.forEach((item, index) => {
         if(!(groupBy in item)){
             throw new Error("Input data invalid, item " + JSON.stringify(item) + " does not have attribute " + groupBy);
-        }else if (!nullExcept || nullExcept.indexOf(item[groupBy]) != -1) {
+        } else if (!nullExcept || (nullExcept.indexOf(item[groupBy]) == -1)) {
             let match = result.find(m_item => (m_item[groupBy] == item[groupBy]));
             if (!match) {
                 match = {
                     [groupBy]: item[groupBy],
-                    items: []
+                    __items: []
                 };
                 result.push(match);
             }
-            match.items.push(item);
+            match.__items.push(item);
         };
     });
     return result;

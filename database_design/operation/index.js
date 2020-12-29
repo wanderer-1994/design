@@ -106,27 +106,33 @@ async function processingProductsData () {
             groupBy: "product_id"
         });
         products.forEach(product => {
-            product.type_id = product.items.find(line_item => line_item.entity_id == product.product_id).type_id;
-            product.items = mysqlutil.groupByAttribute({
-                rawData: product.items,
+            product.type_id = product.__items.find(line_item => line_item.entity_id == product.product_id).type_id;
+            product.__items = mysqlutil.groupByAttribute({
+                rawData: product.__items,
                 groupBy: "entity_id"
             });
             switch (product.type_id) {
                 case "simple":
-                    product.self = product.items.find(line_item => line_item.entity_id == product.product_id);
+                    product.self = product.__items.find(line_item => line_item.entity_id == product.product_id);
                     break;
                 case "configurable":
-                    product.parent = product.items.find(line_item => line_item.entity_id == product.product_id);
-                    product.variants = product.items.filter(line_item => line_item.entity_id != product.product_id);
+                    product.parent = product.__items.find(line_item => line_item.entity_id == product.product_id);
+                    product.variants = product.__items.filter(line_item => line_item.entity_id != product.product_id);
                     break;
                 default:
                     break;
             };
-            product.items.forEach(product_entity => {
+            product.__items.forEach(product_entity => {
                 product_entity.attributes = mysqlutil.groupByAttribute({
-                    rawData: product_entity.items,
+                    rawData: product_entity.__items,
                     groupBy: "attribute_code",
                     nullExcept: [null, ""]
+                });
+                product_entity.attributes.forEach(attr_item => {
+                    if(attr_item[0]){
+                        let keys = Object.keys(attr_item[0]);
+                        keys
+                    }
                 })
             })
         })
