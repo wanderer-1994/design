@@ -10,28 +10,33 @@ CHANGE COLUMN `value` `value` VARCHAR(25) NOT NULL ;
 
 ###
 SELECT `pre`.*, `eav`. frontend_input, `eav`. attribute_code, `eav`. frontend_label FROM (
-    SELECT `p`.entity_id, `p`.sku, `p`.type_id, `varchar`.attribute_id, `varchar`.value
+    SELECT IF(`splk`.parent_id IS NOT NULL, `splk`.parent_id, `p`.entity_id) as product_id, `p`.entity_id, `p`.sku, `p`.type_id, `varchar`.attribute_id, `varchar`.value
 	FROM `catalog_product_entity` as `p`
+	LEFT JOIN `catalog_product_super_link` as `splk` ON `splk`.product_id = `p`.entity_id
 	INNER JOIN `catalog_product_entity_varchar` as `varchar` ON `varchar`.entity_id = `p`.entity_id
 	WHERE `p`.entity_id IN (1,2,3)
   UNION
-    SELECT `p`.entity_id, `p`.sku, `p`.type_id, `text`.attribute_id, `text`.value
+    SELECT IF(`splk`.parent_id IS NOT NULL, `splk`.parent_id, `p`.entity_id) as product_id, `p`.entity_id, `p`.sku, `p`.type_id, `text`.attribute_id, `text`.value
 	FROM `catalog_product_entity` as `p`
+	LEFT JOIN `catalog_product_super_link` as `splk` ON `splk`.product_id = `p`.entity_id
 	INNER JOIN `catalog_product_entity_text` as `text` ON `text`.entity_id = `p`.entity_id
 	WHERE `p`.entity_id IN (1,2,3)
   UNION
-    SELECT `p`.entity_id, `p`.sku, `p`.type_id, `int`.attribute_id, `int`.value
+    SELECT IF(`splk`.parent_id IS NOT NULL, `splk`.parent_id, `p`.entity_id) as product_id, `p`.entity_id, `p`.sku, `p`.type_id, `int`.attribute_id, `int`.value
 	FROM `catalog_product_entity` as `p`
+	LEFT JOIN `catalog_product_super_link` as `splk` ON `splk`.product_id = `p`.entity_id
 	INNER JOIN `catalog_product_entity_int` as `int` ON `int`.entity_id = `p`.entity_id
 	WHERE `p`.entity_id IN (1,2,3)
   UNION
-    SELECT `p`.entity_id, `p`.sku, `p`.type_id, `decimal`.attribute_id, `decimal`.value
+    SELECT IF(`splk`.parent_id IS NOT NULL, `splk`.parent_id, `p`.entity_id) as product_id, `p`.entity_id, `p`.sku, `p`.type_id, `decimal`.attribute_id, `decimal`.value
 	FROM `catalog_product_entity` as `p`
+	LEFT JOIN `catalog_product_super_link` as `splk` ON `splk`.product_id = `p`.entity_id
 	INNER JOIN `catalog_product_entity_decimal` as `decimal` ON `decimal`.entity_id = `p`.entity_id
 	WHERE `p`.entity_id IN (1,2,3)
   UNION
-    SELECT `p`.entity_id, `p`.sku, `p`.type_id, `datetime`.attribute_id, `datetime`.value
+    SELECT IF(`splk`.parent_id IS NOT NULL, `splk`.parent_id, `p`.entity_id) as product_id, `p`.entity_id, `p`.sku, `p`.type_id, `datetime`.attribute_id, `datetime`.value
 	FROM `catalog_product_entity` as `p`
+	LEFT JOIN `catalog_product_super_link` as `splk` ON `splk`.product_id = `p`.entity_id
 	INNER JOIN `catalog_product_entity_datetime` as `datetime` ON `datetime`.entity_id = `p`.entity_id
 	WHERE `p`.entity_id IN (1,2,3)
 ) AS `pre`

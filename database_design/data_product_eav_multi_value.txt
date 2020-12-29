@@ -1,7 +1,7 @@
 INSERT INTO `ecommerce`.product_eav_multi_value
 (attribute_id, entity_id, value)
 VALUES
-### General
+# General
 ('compatible', 'PR001', 'IPhone'),
 ('compatible', 'PR002', 'Samsung'),
 ('compatible', 'PR002', 'IPhone'),
@@ -17,7 +17,7 @@ VALUES
 ('images', 'PR005', 'images/gallery/PR005-1.jpg'),
 ('images', 'PR005', 'images/gallery/PR005-2.jpg'),
 ('images', 'PR005', 'images/gallery/PR005-3.jpg'),
-### Tai nghe
+# Tai nghe
 ('timbre', 'PR001', 'Treble'),
 ('timbre', 'PR001', 'Mid'),
 ('timbre', 'PR002', 'Mid'),
@@ -25,6 +25,6 @@ VALUES
 ('jack_type', 'PR001', 'Lightning'),
 ('jack_type', 'PR002', 'Type C'),
 ('jack_type', 'PR002', 'Micro USB'),
-### Cáp sạc
+# Cáp sạc
 ('material', 'PR001', 'silicon'),
 ('material', 'PR001', 'Dây dù')

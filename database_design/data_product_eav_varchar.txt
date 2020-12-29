@@ -1,7 +1,7 @@
 INSERT INTO `ecommerce`.product_eav_varchar
 (attribute_id, entity_id, value)
 VALUES
-### General
+# General
 ('name', 'PR001', 'Earbud &copy; Skull Candy'),
 ('name', 'PR002', 'Earbud true wireless &copy; Skull Candy'),
 ('name', 'PR003', 'Earbud true wireless &copy; Skull Candy đỏ'),

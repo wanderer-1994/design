@@ -1,7 +1,7 @@
 INSERT INTO `ecommerce`.product_eav
 (attribute_id, label, html_type, data_type, validation, is_super, is_system, unit)
 VALUES
-### General
+# General
 ('name', 'Tên', 'input', 'varchar', '', '1', '1', null),
 ('description', 'Mô tả', 'input', 'text', '', '1', '1', null),
 ('short_description', 'Sơ tả', 'input', 'text', '', '1', '1', null),
@@ -12,14 +12,14 @@ VALUES
 ('thumbnail', 'Thumbnail', 'input', 'varchar', '', '1', '1', null),
 ('images', 'Hình sản phẩm', 'multiinput', 'varchar', '', '1', '1', null),
 ('visible', 'Visible', 'input', 'boolean', '', '1', '1', null),
-### Tai nghe
+# Tai nghe
 ('timbre', 'Âm sắc', 'multiselect', 'varchar', '', '1', '1', null),
 ('frequency', 'Tần số', 'input', 'int', '', '1', '1', 'Hz'),
 ('impedance', 'Trở kháng', 'input', 'decimal', '', '1', '1', 'ohm'),
 ('sensitivity', 'Độ nhạy', 'input', 'varchar', '', '1', '1', null),
 ('distortion', 'Độ nhiễu', 'input', 'varchar', '', '1', '1', null),
 ('jack_type', 'Jack', 'multiselect', 'varchar', '', '1', '1', null),
-### Cáp sạc
+# Cáp sạc
 ('length', 'Chiều dài', 'input', 'decimal', '', '1', '1', 'm'),
 ('material', 'Vật liệu', 'multiselect', 'varchar', '', '1', '1', null),
 ('voltage_in', 'Điện áp vào', 'input', 'decimal', '', '1', '1', 'V'),
@@ -28,13 +28,13 @@ VALUES
 ('ampere_out', 'Ampe ra', 'input', 'decimal', '', '1', '1', 'V'),
 ('is_quick_charge', 'Hỗ trợ sạc nhanh', 'input', 'boolean', '', '1', '1', null),
 ('universal_use', 'Đa dụng', 'input', 'boolean', '', '1', '1', null),
-### Sạc dự phòng
+# Sạc dự phòng
 ('capacity', 'Dung lượng', 'input', 'int', '', '1', '1', 'mAh'),
 ('weight', 'Trọng lượng', 'input', 'int', '', '1', '1', 'gr'),
-('spec_description', 'Thông số kỹ thuật', 'input', 'html', '', '1', '1', null),
-### Củ sạc
-### Bộ sạc
-### Loa
-### Chuột
-### Bàn phím
-### Lót chuột
+('spec_description', 'Thông số kỹ thuật', 'input', 'html', '', '1', '1', null)
+# Củ sạc
+# Bộ sạc
+# Loa
+# Chuột
+# Bàn phím
+# Lót chuột

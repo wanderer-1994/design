@@ -1,4 +1,9 @@
+###
+DROP SCHEMA IF EXISTS `ecommerce`;
+###
 CREATE schema `ecommerce`;
+###
+USE `ecommerce`;
 
 ###
 CREATE TABLE `ecommerce`.`product_entity` (
