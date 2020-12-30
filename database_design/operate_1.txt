@@ -1,46 +1,46 @@
-### Select all product_id after product search query
+### Select all product_id (parent) after product search query
 SELECT DISTINCT IF((parent is not null and parent != ''), parent, entity_id) as product_id FROM ecommerce.product_entity where (entity_id in ('PR001', 'PR004', 'PR005') or parent in ('PR001', 'PR004', 'PR005'));
 
-### Select info of all product entities after find all product_id
-SELECT `pe`.entity_id, `pe`.product_id, `pe`.value, `attributes`.*  FROM (
+### Select info of all product entities after find all product_id (parent)
+SELECT `pe`.entity_id, `pe`.product_id, `pe`.type_id, `pe`.value, `attributes`.*  FROM (
     SELECT
         `pe`.entity_id, IF((`pe`.parent is not null and `pe`.parent != ''), `pe`.parent, `pe`.entity_id) as product_id,
-        `eav`.attribute_id, `eav`.value
+        `pe`.type_id, `eav`.attribute_id, `eav`.value
     FROM `ecommerce`.product_entity as `pe`
     LEFT JOIN `ecommerce`.product_eav_int as `eav` ON `eav`.entity_id = `pe`.entity_id
     WHERE `pe`.entity_id in ('PR001', 'PR002') or `pe`.parent in ('PR001', 'PR002')
     UNION
     SELECT
         `pe`.entity_id, IF((`pe`.parent is not null and `pe`.parent != ''), `pe`.parent, `pe`.entity_id) as product_id,
-        `eav`.attribute_id, `eav`.value
+        `pe`.type_id, `eav`.attribute_id, `eav`.value
     FROM `ecommerce`.product_entity as `pe`
     LEFT JOIN `ecommerce`.product_eav_decimal as `eav` ON `eav`.entity_id = `pe`.entity_id
     WHERE `pe`.entity_id in ('PR001', 'PR002') or `pe`.parent in ('PR001', 'PR002')
     UNION
     SELECT
         `pe`.entity_id, IF((`pe`.parent is not null and `pe`.parent != ''), `pe`.parent, `pe`.entity_id) as product_id,
-        `eav`.attribute_id, `eav`.value
+        `pe`.type_id, `eav`.attribute_id, `eav`.value
     FROM `ecommerce`.product_entity as `pe`
     LEFT JOIN `ecommerce`.product_eav_varchar as `eav` ON `eav`.entity_id = `pe`.entity_id
     WHERE `pe`.entity_id in ('PR001', 'PR002') or `pe`.parent in ('PR001', 'PR002')
     UNION
     SELECT
         `pe`.entity_id, IF((`pe`.parent is not null and `pe`.parent != ''), `pe`.parent, `pe`.entity_id) as product_id,
-        `eav`.attribute_id, `eav`.value
+        `pe`.type_id, `eav`.attribute_id, `eav`.value
     FROM `ecommerce`.product_entity as `pe`
     LEFT JOIN `ecommerce`.product_eav_text as `eav` ON `eav`.entity_id = `pe`.entity_id
     WHERE `pe`.entity_id in ('PR001', 'PR002') or `pe`.parent in ('PR001', 'PR002')
     UNION
     SELECT
         `pe`.entity_id, IF((`pe`.parent is not null and `pe`.parent != ''), `pe`.parent, `pe`.entity_id) as product_id,
-        `eav`.attribute_id, `eav`.value
+        `pe`.type_id, `eav`.attribute_id, `eav`.value
     FROM `ecommerce`.product_entity as `pe`
     LEFT JOIN `ecommerce`.product_eav_datetime as `eav` ON `eav`.entity_id = `pe`.entity_id
     WHERE `pe`.entity_id in ('PR001', 'PR002') or `pe`.parent in ('PR001', 'PR002')
     UNION
     SELECT
         `pe`.entity_id, IF((`pe`.parent is not null and `pe`.parent != ''), `pe`.parent, `pe`.entity_id) as product_id,
-        `eav`.attribute_id, `eav`.value
+        `pe`.type_id, `eav`.attribute_id, `eav`.value
     FROM `ecommerce`.product_entity as `pe`
     LEFT JOIN `ecommerce`.product_eav_multi_value as `eav` ON `eav`.entity_id = `pe`.entity_id
     WHERE `pe`.entity_id in ('PR001', 'PR002') or `pe`.parent in ('PR001', 'PR002')
