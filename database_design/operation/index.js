@@ -74,31 +74,31 @@ async function selectM24MassiveData () {
             FROM \`catalog_product_entity\` as \`p\`
             LEFT JOIN \`catalog_product_super_link\` as \`splk\` ON \`splk\`.product_id = \`p\`.entity_id
             INNER JOIN \`catalog_product_entity_varchar\` as \`varchar\` ON \`varchar\`.entity_id = \`p\`.entity_id
-            WHERE \`p\`.entity_id BETWEEN 1 AND 3000
+            WHERE \`p\`.entity_id BETWEEN 1 AND 400
         UNION
             SELECT IF(\`splk\`.parent_id IS NOT NULL, \`splk\`.parent_id, \`p\`.entity_id) as product_id, \`p\`.entity_id, \`p\`.sku, \`p\`.type_id, \`text\`.attribute_id, \`text\`.value
             FROM \`catalog_product_entity\` as \`p\`
             LEFT JOIN \`catalog_product_super_link\` as \`splk\` ON \`splk\`.product_id = \`p\`.entity_id
             INNER JOIN \`catalog_product_entity_text\` as \`text\` ON \`text\`.entity_id = \`p\`.entity_id
-            WHERE \`p\`.entity_id BETWEEN 1 AND 3000
+            WHERE \`p\`.entity_id BETWEEN 1 AND 400
         UNION
             SELECT IF(\`splk\`.parent_id IS NOT NULL, \`splk\`.parent_id, \`p\`.entity_id) as product_id, \`p\`.entity_id, \`p\`.sku, \`p\`.type_id, \`int\`.attribute_id, \`int\`.value
             FROM \`catalog_product_entity\` as \`p\`
             LEFT JOIN \`catalog_product_super_link\` as \`splk\` ON \`splk\`.product_id = \`p\`.entity_id
             INNER JOIN \`catalog_product_entity_int\` as \`int\` ON \`int\`.entity_id = \`p\`.entity_id
-            WHERE \`p\`.entity_id BETWEEN 1 AND 3000
+            WHERE \`p\`.entity_id BETWEEN 1 AND 400
         UNION
             SELECT IF(\`splk\`.parent_id IS NOT NULL, \`splk\`.parent_id, \`p\`.entity_id) as product_id, \`p\`.entity_id, \`p\`.sku, \`p\`.type_id, \`decimal\`.attribute_id, \`decimal\`.value
             FROM \`catalog_product_entity\` as \`p\`
             LEFT JOIN \`catalog_product_super_link\` as \`splk\` ON \`splk\`.product_id = \`p\`.entity_id
             INNER JOIN \`catalog_product_entity_decimal\` as \`decimal\` ON \`decimal\`.entity_id = \`p\`.entity_id
-            WHERE \`p\`.entity_id BETWEEN 1 AND 3000
+            WHERE \`p\`.entity_id BETWEEN 1 AND 400
         UNION
             SELECT IF(\`splk\`.parent_id IS NOT NULL, \`splk\`.parent_id, \`p\`.entity_id) as product_id, \`p\`.entity_id, \`p\`.sku, \`p\`.type_id, \`datetime\`.attribute_id, \`datetime\`.value
             FROM \`catalog_product_entity\` as \`p\`
             LEFT JOIN \`catalog_product_super_link\` as \`splk\` ON \`splk\`.product_id = \`p\`.entity_id
             INNER JOIN \`catalog_product_entity_datetime\` as \`datetime\` ON \`datetime\`.entity_id = \`p\`.entity_id
-            WHERE \`p\`.entity_id BETWEEN 1 AND 3000
+            WHERE \`p\`.entity_id BETWEEN 1 AND 400
         ) AS \`pre\`
         INNER JOIN \`eav_attribute\` as \`eav\` ON \`pre\`.attribute_id=\`eav\`.attribute_id ORDER BY \`pre\`.entity_id ASC`;
         let start = Date.now();
@@ -113,7 +113,7 @@ async function selectM24MassiveData () {
     }
 };
 
-async function processingProductsData () {
+async function processingM24ProductsData () {
     try {
         let rawData = await selectM24MassiveData();
         console.log(rawData.length);
@@ -122,9 +122,13 @@ async function processingProductsData () {
             rawData: rawData,
             groupBy: "product_id"
         });
-        products.forEach(product => {
+        products.forEach((product, index) => {
             let self = product.__items.find(line_item => line_item.entity_id == product.product_id);
-            if(!self) return;
+            if(!self){
+                console.warn("Product ", product.product_id, " has no parent. Hence is ignored!");
+                products[index] = null;
+                return;
+            }
             product.type_id = self.type_id;
             product.__items = mysqlutil.groupByAttribute({
                 rawData: product.__items,
@@ -173,6 +177,7 @@ async function processingProductsData () {
             });
             delete product.__items;
         })
+        products = products.filter(product => product != null);
         let end = Date.now();
         console.log("product processing took: ", end - start, " ms");
         // await fs.writeJSON("../test2.json", products);
@@ -182,4 +187,4 @@ async function processingProductsData () {
     }
 }
 
-processingProductsData()
+processingM24ProductsData()
