@@ -383,7 +383,11 @@ async function getProductsCache () {
     console.log("get products cache took ", end - start, " ms");
     console.log(products.length);
     fs.re
-}
+};
+
+(() => {
+    console.log(require("module").builtinModules);
+})()
 
 // modelizeM24ProductsData()
 // getProductsCache()
