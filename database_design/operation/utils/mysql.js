@@ -56,8 +56,13 @@ function groupByAttribute ({rawData, groupBy, nullExcept}) {
     return result;
 }
 
+function escapeQuotes (string) {
+    return string.replace(/\`/g, "\\`").replace(/\"/g, '\\"').replace(/\'/g, "\\'");
+}
+
 module.exports = {
     generateConnection,
     separateSQL,
-    groupByAttribute
+    groupByAttribute,
+    escapeQuotes
 }

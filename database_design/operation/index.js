@@ -84,7 +84,7 @@ function centralizeAttributeMetaData (products) {
 
 async function initEcommerceDB ()  {
     try {
-        console.log("start: ", Date.now())
+        let start = Date.now()
         const DB = await mysqlutil.generateConnection(sqlDBConfig);
         let sqls = [];
         for (let i = 0; i < executes.length; i++) {
@@ -98,8 +98,9 @@ async function initEcommerceDB ()  {
         for (let i = 0; i < sqls.length; i++) {
             await DB.promiseQuery(sqls[i]);
         }
+        let end = Date.now();
+        console.log("DB init took ", end - start, " ms");
         DB.end();
-        console.log("end: ", Date.now())
     } catch (error) {
         throw error;
     }
@@ -383,11 +384,7 @@ async function getProductsCache () {
     console.log("get products cache took ", end - start, " ms");
     console.log(products.length);
     fs.re
-};
-
-(() => {
-    console.log(require("module").builtinModules);
-})()
+}
 
 // modelizeM24ProductsData()
 // getProductsCache()
