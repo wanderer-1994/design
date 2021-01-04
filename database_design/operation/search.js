@@ -1,4 +1,5 @@
 const mysqlutil = require("./utils/mysql");
+const fulltextSearch = require("./utils/fulltextSearch");
 
 var sqlDBConfig = {
     host: "localhost",
@@ -13,24 +14,28 @@ var sqlM24Config = {
     user: "root",
 }
 
-async function searchDB ({categories, product_ids, searchPhrase, refinements, page}) {
+async function searchDB ({ categories, product_ids, refinements, searchPhrase, searchDictionary, page }) {
     const DB = await mysqlutil.generateConnection(sqlDBConfig);
     let start = Date.now();
-    // search config validation
+    // SEARCH CONFIG VALIDATION
     try {
-        if (categories) {
+        if (categories && Array.isArray(categories)) {
             categories.forEach(item => {
                 if (typeof(item) != "string" || item.length == 0)
                     throw new Error("Search config invalid: categories must be a list of none-empty string!");
             });
+        } else {
+            categories = null;
         }
-        if (product_ids) {
+        if (product_ids && Array.isArray(product_ids)) {
             product_ids.forEach(item => {
                 if (typeof(item) != "string" || item.length == 0)
                     throw new Error("Search config invalid: product_ids must be a list of none-empty string!");
             });
+        } else {
+            product_ids = null;
         }
-        if (refinements) {
+        if (refinements && Array.isArray(refinements)) {
             refinements.forEach(item => {
                 if (typeof(item.attribute_id) != "string" || item.attribute_id.length == 0)
                     throw new Error("Search config invalid: refinement attribute_id must be a none-empty string!");
@@ -41,11 +46,20 @@ async function searchDB ({categories, product_ids, searchPhrase, refinements, pa
                         throw new Error("Search config invalid: refinement value must be a list of string or number!")
                 })
             });
+        } else {
+            refinements = null;
+        }
+        if (
+            (searchPhrase != null && typeof(searchPhrase) != "string") ||
+            (typeof(searchPhrase) == "string" && trim(searchPhrase).length == 0)
+        ) {
+            throw new Error("Search config invalid: searchPhrase must be none-empty string!")
         }
     } catch (err) {
         throw err
     }
-    // search entity_ids and rank order
+    // SEARCH entity_ids ORDERED BY RANKING
+    // ## search by category_id
     let queryCID = "";
     if (categories && categories.length > 0) {
         queryCID =
@@ -64,7 +78,7 @@ async function searchDB ({categories, product_ids, searchPhrase, refinements, pa
         WHERE category_id IN(SELECT DISTINCT entity_id FROM \`cte\`)
         `;
     }
-
+    // ## search by product_id
     let queryPID = ""
     if (product_ids && product_ids.length > 0) {
         queryPID =
@@ -74,7 +88,7 @@ async function searchDB ({categories, product_ids, searchPhrase, refinements, pa
         WHERE \`pe\`.entity_id IN (\'${product_ids.map(item => mysqlutil.escapeQuotes(item)).join("\', \'")}\')
         `;
     }
-
+    // ## search by attribute refinements
     let queryRefinement = "";
     if (refinements && refinements.length > 0) {
         let refinementComponentQueries = refinements.map(item => {
@@ -110,12 +124,23 @@ async function searchDB ({categories, product_ids, searchPhrase, refinements, pa
         ) AS \`alias\`
         `;
     }
-
+    // ## search by search phrase
     let querySearchPhrase = "";
+    if (searchPhrase) {
+        querySearchPhrase = fulltextSearch.generateFulltextSqlSearchProductEntity({
+            searchPhrase: searchPhrase,
+            searchDictionary: searchDictionary
+        });
+    }
     
+    // ## final assembled search query
     let assembledQuery = [queryCID, queryPID, queryRefinement, querySearchPhrase]
     .filter(item => (item != null && item != ""))
     .join(" UNION ALL ");
+    
+    if (assembledQuery.length == 0) {
+        assembledQuery = `SELECT entity_id, 1 AS \`weight\` FROM \`ecommerce\`.product_entity`;
+    }
 
     console.log(assembledQuery);
     let result = await DB.promiseQuery(assembledQuery)
@@ -145,6 +170,5 @@ let searchConfig = {
     }],
     "page": 2
 }
-
 
 searchDB(searchConfig);

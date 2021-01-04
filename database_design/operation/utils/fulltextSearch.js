@@ -1,5 +1,5 @@
 const utils = require("./utils");
-const mysql = require("./mysql");
+const mysqlutil = require("./mysql");
 
 function removeArrayDuplicate (array) {
     for(let i = 0; i < array.length; i++){
@@ -40,7 +40,35 @@ function decomposeSearchPhrase (std_search_phrase) {
     return searchDecompsed;
 }
 
-function generateFulltextSqlSearchProductEntity ({categories, product_id, searchPhrase, refinement}) {
+
+function addDictionary ({ searchDecompsed, searchDictionary }) {
+    this.generateSearchWords = ({ keys, searchDictionary }) => {
+        let searchWords = [];
+        
+    }
+    if (Array.isArray(searchDecompsed.strict_match_compound_words)) {
+        searchDecompsed.strict_match_compound_words.forEach(item => {
+            
+        })
+    }
+    if (Array.isArray(searchDecompsed.strict_match_single_words)) {
+        searchDecompsed.strict_match_single_words.forEach(item => {
+            
+        })
+    }
+    if (Array.isArray(searchDecompsed.ease_match_compound_words)) {
+        searchDecompsed.ease_match_compound_words.forEach(item => {
+            
+        })
+    }
+    if (Array.isArray(searchDecompsed.ease_match_single_words)) {
+        searchDecompsed.ease_match_single_words.forEach(item => {
+            
+        })
+    }
+}
+
+function generateFulltextSqlSearchProductEntity ({ searchPhrase, searchDictionary }) {
     this.generateSql = (search_config) => {
         let {keywords, compare_mode, weight, prefix, postfix, table} = {...search_config};
         if(!compare_mode || !table || !keywords || keywords.length < 1) return null;
@@ -48,7 +76,7 @@ function generateFulltextSqlSearchProductEntity ({categories, product_id, search
         keywords.forEach(key => {
             sql.push(`SELECT entity_id, ${weight} AS \`weight\` 
             FROM \`magento24\`.\`${table}\` 
-            WHERE attribute_id=73 AND UPPER(value) ${compare_mode} "${prefix}${mysql.escapeQuotes(key)}${postfix}" 
+            WHERE attribute_id=73 AND UPPER(value) ${compare_mode} "${prefix}${mysqlutil.escapeQuotes(key)}${postfix}" 
             GROUP BY \`weight\``);
         });
         sql = sql.join(" UNION ALL ");
@@ -56,15 +84,9 @@ function generateFulltextSqlSearchProductEntity ({categories, product_id, search
         return sql;
     }
 
-    if (product_id && product_id.trim().length > 0) {
-        return `SELECT entity_id AS entity_ids, 100 AS \`weight\`
-        FROM \`magento24\`.catalog_product_entity
-        WHERE entity_id="${mysql.escapeQuotes(product_id)}"
-        LIMIT 1;`
-    }
     let sqlArr = [];
     if (searchPhrase && searchPhrase.trim().length > 0) {
-        let std_search_phrase = searchPhrase.replace(/\(+|\)+|-+|\/+|\\+|\,+|\++/g, " ")
+        let std_search_phrase = searchPhrase.replace(/\(+|\)+|-+|\/+|\\+|\,+|\++|\t+|\n+/g, " ")
         .replace(/^\s+|\s+$/g, "").toUpperCase();
         let searchDecompsed = decomposeSearchPhrase(std_search_phrase);
         let sql_1_weight = this.generateSql({
@@ -100,25 +122,6 @@ function generateFulltextSqlSearchProductEntity ({categories, product_id, search
             table: "catalog_product_entity_varchar"
         });
         sqlArr.push(sql_1_weight, sql_2_weight, sql_3_weight, sql_4_weight);
-    }
-    if (refinement && refinement.length > 0) {
-        refinement.forEach(attribute => {
-            attribute.values.forEach((value, index) => {
-                attribute.values[index] = mysql.escapeQuotes(value.toUpperCase());
-            })
-            sqlArr.push(`SELECT entity_id, 100 AS \`weight\`
-            FROM \`magento24\`.\`${attribute.table}\`
-            WHERE attribute_id="${mysql.escapeQuotes(attribute.attribute_id)}" AND UPPER(value) IN("${attribute.values.join("\", \"")}")`)
-        })
-    }
-    if (categories && categories.length > 0) {
-        // allow filter by many categories
-        categories.forEach((category, index) => {
-            categories[index] = mysql.escapeQuotes(category);
-        })
-        sqlArr.push(`SELECT product_id AS entity_id, 100 AS \`weight\`
-        FROM \`magento24\`.\`catalog_category_product\`
-        WHERE category_id IN("${categories.join("\", \"")}")`);
     }
     sqlArr = sqlArr.filter(item => (item != null && item.length > 0));
     if(sqlArr.length < 1) return null;
