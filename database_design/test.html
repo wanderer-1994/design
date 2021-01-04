@@ -1,1 +1,12 @@
-<div>Earbud <sup>&reg;</sup>Skull Candy</div>
+WITH RECURSIVE \`cte\` (entity_id, name, parent) AS (
+    SELECT entity_id, name, parent
+    FROM \`ecommerce\`.category_entity
+    WHERE entity_id='sound_accessory'
+    UNION ALL
+    SELECT p.entity_id, p.name, p.parent
+    FROM \`ecommerce\`.category_entity AS \`p\`
+    INNER JOIN cte ON \`p\`.parent = \`cte\`.entity_id
+)
+SELECT \`pca\`.product_id FROM \`ecommerce\`.product_category_assignment AS \`pca\`
+INNER JOIN \`ecommerce\`.product_entity AS \`pe\` ON \`pe\`.entity_id = \`pca\`.product_id
+WHERE category_id IN(SELECT DISTINCT entity_id FROM \`cte\`)

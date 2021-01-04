@@ -1,0 +1,14 @@
+{
+    "categories": ["earbud", "charge_cable"],
+    "product_ids": ["PR001", "PR003"],
+    "searchPhrase": "Tai nghe bluetooth",
+    "refinements": [{
+        "attribute_id": "color",
+        "value": ["Đỏ_#eb3458", "Lam_#eb3458"]
+    },
+    {
+        "attribute_id": "impedance",
+        "value": [32, 17.5]
+    }],
+    "page": 2
+}

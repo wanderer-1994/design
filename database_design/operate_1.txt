@@ -47,3 +47,37 @@ SELECT `pe`.entity_id, `pe`.product_id, `pe`.type_id, `pe`.value, `attributes`.*
 ) as `pe`
 LEFT JOIN `ecommerce`.product_eav as `attributes` ON `attributes`.attribute_id = `pe`.attribute_id
 ORDER BY `pe`.product_id, `pe`.entity_id
+
+### Recursive get all child category by parent category
+
+### Work
+SELECT GROUP_CONCAT(lv SEPARATOR ',') FROM (
+SELECT @pv:=(SELECT GROUP_CONCAT(entity_id SEPARATOR ',') FROM ecommerce.category_entity 
+WHERE FIND_IN_SET(parent, @pv)) AS lv FROM ecommerce.category_entity 
+JOIN
+(SELECT @pv:='sound_accessory') tmp
+) a;
+
+### Work
+WITH RECURSIVE `cte` (entity_id) AS (
+    SELECT entity_id
+    FROM `ecommerce`.category_entity
+    WHERE entity_id IN ('sound_accessory')
+    UNION ALL
+    SELECT p.entity_id
+    FROM `ecommerce`.category_entity AS `p`
+    INNER JOIN cte ON `p`.parent = `cte`.entity_id
+)
+SELECT `pca`.product_id, 100 AS `weight` FROM `ecommerce`.product_category_assignment AS `pca`
+INNER JOIN `ecommerce`.product_entity AS `pe` ON `pe`.entity_id = `pca`.product_id
+WHERE category_id IN(SELECT DISTINCT entity_id FROM `cte`);
+
+### Investigate
+select  entity_id,
+        name,
+        parent 
+from    (select * from ecommerce.category_entity
+         order by parent, entity_id) AS cat_sorted,
+        (select @pv := 'sound_accessory') initialisation
+where   find_in_set(parent, @pv)
+and     length(@pv := concat(@pv, ',', entity_id));

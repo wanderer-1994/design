@@ -30,6 +30,7 @@ var executes = [
     'data_product_eav_text.txt',
     'data_product_eav_varchar.txt',
     'data_product_entity.txt',
+    'data_category_entity.txt'
 ];
 
 var sqlDBConfig = {
