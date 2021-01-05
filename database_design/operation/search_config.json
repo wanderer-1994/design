@@ -12,3 +12,38 @@
     }],
     "page": 2
 }
+
+{
+    "searchPhrase": "đi lang thang về miền đơn độc",
+    "synonyms": ["đơn độc, cô độc, cô đơn", "đi, bước, chạy"]
+}
+
+{
+    "searchPhrase": "đi lang thang về miền đơn độc",
+    "synonyms": ["lang thang, lững thững", "đi, bước, chạy"]
+}
+
+{
+    "stdPhrase": "đi lang thang về miền đơn độc",
+    "searchPhraseVariations": [
+        "đi lang thang về miền đơn độc",    // 1
+        "đi lang thang về miền cô độc",     // 2
+        "di lang thang ve mien don doc",    // 3
+        "di lang thang ve mien co doc",     // 4
+        "đi lang thâng ve mien đon dộc",    // 5
+        "đi lang thâng ve mien cô dộc"      // 6
+    ],
+    "synonyms": ["đơn độc, cô độc"],
+    "result1": {
+        "strict_match_compound_words": ["đi lang", "lang thang", "thang về", "về miền", "miền đơn", ["đơn độc", "cô độc"]],
+        "strict_match_single_words": ["đi", "lang", "thang", "về", "miền", "đơn", "độc"],
+        "ease_match_compound_words": ["di lang", "lang thang", "thang ve", "ve mien", "mien don", ["don doc", "co doc"]],
+        "ease_match_single_words": ["di", "lang", "thang", "ve", "mien", "don", "doc"]
+    },
+    "result2": {
+        "strict_match_compound_words": ["đi lang", "lang thang", "thang về", "về miền", "miền cô", ["cô độc", "đơn độc"]],
+        "strict_match_single_words": ["đi", "lang", "thang", "về", "miền", "cô", "độc"],
+        "ease_match_compound_words": ["di lang", "lang thang", "thang ve", "ve mien", "mien co", ["co doc", "don doc"]],
+        "ease_match_single_words": ["di", "lang", "thang", "ve", "mien", "co", "doc"]
+    }
+}

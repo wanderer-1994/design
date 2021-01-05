@@ -32,39 +32,53 @@ function decomposeSearchPhrase (std_search_phrase) {
     let strict_keys = this.generateKeywords(std_search_phrase);
     let ease_keys = this.generateKeywords(unsigned_search);
     let searchDecompsed = {
-        strict_match_compound_words: strict_keys.compound_keys.filter(keyword => keyword != utils.removeVnCharacter(keyword)),
-        strict_match_single_words: strict_keys.single_keys.filter(keyword => keyword != utils.removeVnCharacter(keyword)),
-        ease_match_compound_words: ease_keys.compound_keys,
-        ease_match_single_words: ease_keys.single_keys
+        strict_match_compound_words: strict_keys.compound_keys,
+        strict_match_single_words: strict_keys.single_keys,
+        ease_match_compound_words: ease_keys.compound_keys.filter(keyword => std_search_phrase.indexOf(keyword) == -1),
+        ease_match_single_words: ease_keys.single_keys.filter(keyword => std_search_phrase.indexOf(keyword) == -1)
     }
     return searchDecompsed;
 }
 
 
-function addDictionary ({ searchDecompsed, searchDictionary }) {
-    this.generateSearchWords = ({ keys, searchDictionary }) => {
-        let searchWords = [];
-        
-    }
-    if (Array.isArray(searchDecompsed.strict_match_compound_words)) {
-        searchDecompsed.strict_match_compound_words.forEach(item => {
-            
-        })
-    }
-    if (Array.isArray(searchDecompsed.strict_match_single_words)) {
-        searchDecompsed.strict_match_single_words.forEach(item => {
-            
-        })
-    }
-    if (Array.isArray(searchDecompsed.ease_match_compound_words)) {
-        searchDecompsed.ease_match_compound_words.forEach(item => {
-            
-        })
-    }
-    if (Array.isArray(searchDecompsed.ease_match_single_words)) {
-        searchDecompsed.ease_match_single_words.forEach(item => {
-            
-        })
+function generateDictionaryKey ({ std_search_phrase, searchDictionary }) {
+    try {
+        let result = {
+            strict_match_compound_words: [],
+            strict_match_single_words: []
+        };
+
+        let unsigned_search = utils.removeVnCharacter(std_search_phrase);
+
+        if (searchPhrase && searchDictionary && searchDictionary.synonyms) {
+            // The searchDictionary keywords need to be trimmed & transformed to uppercase
+            // when it is loaded at the database connection phase. We will not trim and transform here
+            // because it will costs calculation in every search request if we do so
+            let synonyms = searchDictionary.synonyms;
+            synonyms.forEach(group => {
+                let isMatch = group.some(keyword => {
+                    // A synonym keyword is considered to match with search_phrase when 1, It match exactly
+                    // with it's VN characters OR 2, It is a compound word and match when remove VN characters
+                    return (
+                        std_search_phrase.indexOf(keyword) != -1 ||
+                        (/\s/.test(keyword) && unsigned_search.indexOf(utils.removeVnCharacter(keyword)) != -1)
+                    )
+                })
+                if (isMatch) {
+                    group.forEach(keyword => {
+                        if (/\s/.test(keyword)) {
+                            result.strict_match_compound_words.push(keyword);
+                        } else {
+                            result.strict_match_single_words.push(keyword);
+                        }
+                    })
+                }
+            })
+        }
+        return result;
+    } catch (err) {
+        err.message += "\nSearch phrase and searchDictionary might be passed incorrectly!";
+        throw err;
     }
 }
 
@@ -75,8 +89,8 @@ function generateFulltextSqlSearchProductEntity ({ searchPhrase, searchDictionar
         let sql = [];
         keywords.forEach(key => {
             sql.push(`SELECT entity_id, ${weight} AS \`weight\` 
-            FROM \`magento24\`.\`${table}\` 
-            WHERE attribute_id=73 AND UPPER(value) ${compare_mode} "${prefix}${mysqlutil.escapeQuotes(key)}${postfix}" 
+            FROM \`ecommerce\`.\`${table}\` 
+            WHERE attribute_id=\'name\' AND UPPER(value) ${compare_mode} "${prefix}${mysqlutil.escapeQuotes(key)}${postfix}" 
             GROUP BY \`weight\``);
         });
         sql = sql.join(" UNION ALL ");
@@ -87,15 +101,22 @@ function generateFulltextSqlSearchProductEntity ({ searchPhrase, searchDictionar
     let sqlArr = [];
     if (searchPhrase && searchPhrase.trim().length > 0) {
         let std_search_phrase = searchPhrase.replace(/\(+|\)+|-+|\/+|\\+|\,+|\++|\t+|\n+/g, " ")
-        .replace(/^\s+|\s+$/g, "").toUpperCase();
+        .replace(/^\s+|\s+$/g, "").replace(/\s+/g, " ").toUpperCase();
         let searchDecompsed = decomposeSearchPhrase(std_search_phrase);
+        if (searchDictionary && searchDictionary.synonyms) {
+            let dictionaryKeys = generateDictionaryKey({ std_search_phrase, searchDictionary });
+            searchDecompsed.strict_match_compound_words = [...searchDecompsed.strict_match_compound_words, ...dictionaryKeys.strict_match_compound_words];
+            searchDecompsed.strict_match_compound_words = removeArrayDuplicate(searchDecompsed.strict_match_compound_words);
+            searchDecompsed.strict_match_single_words = [...searchDecompsed.strict_match_single_words, ...dictionaryKeys.strict_match_single_words]
+            searchDecompsed.strict_match_single_words = removeArrayDuplicate(searchDecompsed.strict_match_single_words)
+        }
         let sql_1_weight = this.generateSql({
             keywords: searchDecompsed.ease_match_single_words,
             compare_mode: "LIKE",
             weight: 1,
             prefix: "%",
             postfix: "%",
-            table: "catalog_product_entity_varchar"
+            table: "product_eav_varchar"
         });
         let sql_2_weight = this.generateSql({
             keywords: searchDecompsed.ease_match_compound_words,
@@ -103,7 +124,7 @@ function generateFulltextSqlSearchProductEntity ({ searchPhrase, searchDictionar
             weight: 2,
             prefix: "%",
             postfix: "%",
-            table: "catalog_product_entity_varchar"
+            table: "product_eav_varchar"
         });
         let sql_3_weight = this.generateSql({
             keywords: searchDecompsed.strict_match_single_words,
@@ -111,7 +132,7 @@ function generateFulltextSqlSearchProductEntity ({ searchPhrase, searchDictionar
             weight: 3,
             prefix: "%",
             postfix: "%",
-            table: "catalog_product_entity_varchar"
+            table: "product_eav_varchar"
         });
         let sql_4_weight = this.generateSql({
             keywords: searchDecompsed.strict_match_compound_words,
@@ -119,7 +140,7 @@ function generateFulltextSqlSearchProductEntity ({ searchPhrase, searchDictionar
             weight: 4,
             prefix: "%",
             postfix: "%",
-            table: "catalog_product_entity_varchar"
+            table: "product_eav_varchar"
         });
         sqlArr.push(sql_1_weight, sql_2_weight, sql_3_weight, sql_4_weight);
     }
