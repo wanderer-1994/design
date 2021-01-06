@@ -153,36 +153,22 @@ function generateFulltextSqlSearchProductEntity ({ searchPhrase, searchDictionar
 }
 
 function sortProductEntitiesBySignificantWeight (rowData) {
-    let found_prods = [];
-    for(let i = 4; i > 0; i--){
-        let row_data = rowData.find(row => {
-            return row.weight == i;
-        });
-        if(row_data && row_data.prod_ids != null && row_data.prod_ids.length > 0){
-            let prod_ids = row_data.prod_ids.split(/,\s*/);
-            prod_ids.forEach(prod_id_item => {
-                let found_match = found_prods.find(found_item => {
-                    return found_item.prod_id == prod_id_item;
-                });
-                if(!found_match){
-                    found_prods.push({
-                        prod_id: prod_id_item,
-                        weight: i,
-                        position: i*10
-                    })
-                }else{
-                    found_match.position += i*10;
-                }
+    let found_entities = [];
+    rowData.forEach(row => {
+        let found_match = found_entities.find(item => item.entity_id == row.entity_id);
+        if(!found_match){
+            found_entities.push({
+                entity_id: row.entity_id,
+                weight: row.weight
             })
+        }else{
+            found_match.weight += row.weight;
         }
-    }
-    found_prods.sort((a, b) => {
-        return b.position - a.position;
+    })
+    found_entities.sort((a, b) => {
+        return b.weight - a.weight;
     });
-    let sorted_prod_ids = [];
-    found_prods.forEach(prod => {
-        sorted_prod_ids.push(prod.prod_id);
-    });
+    return found_entities;
 }
 
 module.exports = {

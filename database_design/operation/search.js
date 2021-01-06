@@ -98,31 +98,34 @@ async function searchDB ({ categories, product_ids, refinements, searchPhrase, s
         
         queryRefinement =
         `
-        SELECT DISTINCT entity_id, 10 AS \`weight\` FROM
-        (   SELECT \`eav\`.entity_id
-            FROM \`ecommerce\`.\`product_eav_varchar\` AS \`eav\`
-            WHERE ${refinementComponentQueries}
-        UNION ALL
-            SELECT \`eav\`.entity_id
-            FROM \`ecommerce\`.\`product_eav_text\` AS \`eav\`
-            WHERE ${refinementComponentQueries}
-        UNION ALL
-            SELECT \`eav\`.entity_id
-            FROM \`ecommerce\`.\`product_eav_int\` AS \`eav\`
-            WHERE ${refinementComponentQueries}
-        UNION ALL
-            SELECT \`eav\`.entity_id
-            FROM \`ecommerce\`.\`product_eav_decimal\` AS \`eav\`
-            WHERE ${refinementComponentQueries}
-        UNION ALL
-            SELECT \`eav\`.entity_id
-            FROM \`ecommerce\`.\`product_eav_datetime\` AS \`eav\`
-            WHERE ${refinementComponentQueries}
-        UNION ALL
-            SELECT \`eav\`.entity_id
-            FROM \`ecommerce\`.\`product_eav_multi_value\` AS \`eav\`
-            WHERE ${refinementComponentQueries}
-        ) AS \`alias\`
+        SELECT entity_id, 10*${refinements.length} AS \`weight\` FROM
+        (   SELECT entity_id, GROUP_CONCAT(attribute_id) AS attribute_ids FROM
+            (   SELECT \`eav\`.entity_id, \`eav\`.attribute_id
+                FROM \`ecommerce\`.\`product_eav_varchar\` AS \`eav\`
+                WHERE ${refinementComponentQueries}
+            UNION ALL
+                SELECT \`eav\`.entity_id, \`eav\`.attribute_id
+                FROM \`ecommerce\`.\`product_eav_text\` AS \`eav\`
+                WHERE ${refinementComponentQueries}
+            UNION ALL
+                SELECT \`eav\`.entity_id, \`eav\`.attribute_id
+                FROM \`ecommerce\`.\`product_eav_int\` AS \`eav\`
+                WHERE ${refinementComponentQueries}
+            UNION ALL
+                SELECT \`eav\`.entity_id, \`eav\`.attribute_id
+                FROM \`ecommerce\`.\`product_eav_decimal\` AS \`eav\`
+                WHERE ${refinementComponentQueries}
+            UNION ALL
+                SELECT \`eav\`.entity_id, \`eav\`.attribute_id
+                FROM \`ecommerce\`.\`product_eav_datetime\` AS \`eav\`
+                WHERE ${refinementComponentQueries}
+            UNION ALL
+                SELECT \`eav\`.entity_id, \`eav\`.attribute_id
+                FROM \`ecommerce\`.\`product_eav_multi_value\` AS \`eav\`
+                WHERE ${refinementComponentQueries}
+            ) AS \`alias\` GROUP BY entity_id
+        ) AS \`alias2\`
+        WHERE (${refinements.map(item => `FIND_IN_SET(\'${mysqlutil.escapeQuotes(item.attribute_id)}\', \`alias2\`.attribute_ids)`).join(" AND ")})
         `;
     }
     // ## search by search phrase
@@ -139,14 +142,13 @@ async function searchDB ({ categories, product_ids, refinements, searchPhrase, s
         assembledQuery = `SELECT entity_id, 1 AS \`weight\` FROM \`ecommerce\`.product_entity`;
     }
 
-    console.log(assembledQuery);
     let result = await DB.promiseQuery(assembledQuery)
     // search product_ids
     // search all product data by product_ids
     let end = Date.now();
     console.log("search query took: ", end - start, " ms");
-    console.log(result);
     DB.end();
+    return result;
 };
 
 async function searchM24 ({ categories, product_ids, refinements, searchPhrase, searchDictionary, page }) {
@@ -232,27 +234,30 @@ async function searchM24 ({ categories, product_ids, refinements, searchPhrase, 
         
         queryRefinement =
         `
-        SELECT DISTINCT entity_id, 10 AS \`weight\` FROM
-        (   SELECT \`eav\`.entity_id
-            FROM \`magento24\`.\`catalog_product_entity_varchar\` AS \`eav\`
-            WHERE ${refinementComponentQueries}
-        UNION ALL
-            SELECT \`eav\`.entity_id
-            FROM \`magento24\`.\`catalog_product_entity_text\` AS \`eav\`
-            WHERE ${refinementComponentQueries}
-        UNION ALL
-            SELECT \`eav\`.entity_id
-            FROM \`magento24\`.\`catalog_product_entity_int\` AS \`eav\`
-            WHERE ${refinementComponentQueries}
-        UNION ALL
-            SELECT \`eav\`.entity_id
-            FROM \`magento24\`.\`catalog_product_entity_decimal\` AS \`eav\`
-            WHERE ${refinementComponentQueries}
-        UNION ALL
-            SELECT \`eav\`.entity_id
-            FROM \`magento24\`.\`catalog_product_entity_datetime\` AS \`eav\`
-            WHERE ${refinementComponentQueries}
-        ) AS \`alias\`
+        SELECT entity_id, 10*${refinements.length} AS \`weight\` FROM
+        (   SELECT entity_id, GROUP_CONCAT(attribute_id) AS attribute_ids FROM
+            (   SELECT \`eav\`.entity_id, \`eav\`.attribute_id
+                FROM \`magento24\`.\`catalog_product_entity_varchar\` AS \`eav\`
+                WHERE ${refinementComponentQueries}
+            UNION ALL
+                SELECT \`eav\`.entity_id, \`eav\`.attribute_id
+                FROM \`magento24\`.\`catalog_product_entity_text\` AS \`eav\`
+                WHERE ${refinementComponentQueries}
+            UNION ALL
+                SELECT \`eav\`.entity_id, \`eav\`.attribute_id
+                FROM \`magento24\`.\`catalog_product_entity_int\` AS \`eav\`
+                WHERE ${refinementComponentQueries}
+            UNION ALL
+                SELECT \`eav\`.entity_id, \`eav\`.attribute_id
+                FROM \`magento24\`.\`catalog_product_entity_decimal\` AS \`eav\`
+                WHERE ${refinementComponentQueries}
+            UNION ALL
+                SELECT \`eav\`.entity_id, \`eav\`.attribute_id
+                FROM \`magento24\`.\`catalog_product_entity_datetime\` AS \`eav\`
+                WHERE ${refinementComponentQueries}
+            ) AS \`alias\` GROUP BY entity_id
+        ) AS \`alias2\`
+        WHERE (${refinements.map(item => `FIND_IN_SET(\'${mysqlutil.escapeQuotes(item.attribute_id)}\', \`alias2\`.attribute_ids)`).join(" AND ")})
         `;
     }
     // ## search by search phrase
@@ -268,19 +273,17 @@ async function searchM24 ({ categories, product_ids, refinements, searchPhrase, 
     if (assembledQuery.length == 0) {
         assembledQuery = `SELECT entity_id, 1 AS \`weight\` FROM \`magento24\`.catalog_product_entity`;
     }
-
-    console.log(assembledQuery);
     let result = await M24.promiseQuery(assembledQuery)
     // search product_ids
     // search all product data by product_ids
     let end = Date.now();
     console.log("search query took: ", end - start, " ms");
-    console.log(result);
     M24.end();
+    return result;
 };
 
-let searchConfig = {
-    "categories": ["3", "8"],
+let searchConfigDB = {
+    "categories": ["earbud", "charge_cable"],
     "product_ids": ["PR001", "PR003"],
     "refinements": [{
         "attribute_id": "length",
@@ -294,11 +297,37 @@ let searchConfig = {
         "attribute_id": "impedance",
         "value": [32, 17.5]
     }],
-    "searchPhrase": "Joust Duffle Bag",
+    "searchPhrase": "Joust Duffle",
     "searchDictionary": {
         "synonyms": [["SẠC DỰ PHÒNG", "POWERBANK", "PIN DỰ PHÒNG"], ["CÁP SẠC", "DÂY SẠC"], ["IPHONE", "LIGHTNING"], ["ANDROID", "SAMSUNG"]]
     },
     "page": 2
-}
+};
 
-searchM24(searchConfig)
+let searchConfigM24 = {
+    "categories": ["6"],
+    "product_ids": ["001", "003"],
+    "refinements": [{
+        "attribute_id": "73",
+        "value": ["Joust Duffle Bag", "Strive Shoulder Pack"]
+    },
+    // {
+    //     "attribute_id": "23",
+    //     "value": ["Joust Duffle Bag", "Strive Shoulder Pack"]
+    // },
+    {
+        "attribute_id": "89",
+        "value": ["/m/b/mb01-blue-0.jpg", "/m/b/mb04-black-0.jpg"]
+    }],
+    "searchPhrase": "Joust Duffle",
+    "searchDictionary": {
+        "synonyms": [["SẠC DỰ PHÒNG", "POWERBANK", "PIN DỰ PHÒNG"], ["CÁP SẠC", "DÂY SẠC"], ["IPHONE", "LIGHTNING"], ["ANDROID", "SAMSUNG"]]
+    },
+    "page": 2
+};
+
+(async () => {
+    let rowData = await searchM24(searchConfigM24);
+    let sorted_data = fulltextSearch.sortProductEntitiesBySignificantWeight(rowData);
+    console.log(sorted_data);
+})()
