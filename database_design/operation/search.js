@@ -51,7 +51,7 @@ async function searchDB ({ categories, product_ids, refinements, searchPhrase, s
         }
         if (
             (searchPhrase != null && typeof(searchPhrase) != "string") ||
-            (typeof(searchPhrase) == "string" && trim(searchPhrase).length == 0)
+            (typeof(searchPhrase) == "string" && searchPhrase.trim().length == 0)
         ) {
             throw new Error("Search config invalid: searchPhrase must be none-empty string!")
         }
@@ -127,12 +127,8 @@ async function searchDB ({ categories, product_ids, refinements, searchPhrase, s
     // ## search by search phrase
     let querySearchPhrase = "";
     if (searchPhrase) {
-        querySearchPhrase = fulltextSearch.generateFulltextSqlSearchProductEntity({
-            searchPhrase: searchPhrase,
-            searchDictionary: searchDictionary
-        });
+        querySearchPhrase = fulltextSearch.generateFulltextSqlSearchProductEntity({ searchPhrase, searchDictionary });
     }
-    
     // ## final assembled search query
     let assembledQuery = [queryCID, queryPID, queryRefinement, querySearchPhrase]
     .filter(item => (item != null && item != ""))
@@ -155,7 +151,6 @@ async function searchDB ({ categories, product_ids, refinements, searchPhrase, s
 let searchConfig = {
     "categories": ["earbud", "charge_cable"],
     "product_ids": ["PR001", "PR003"],
-    "searchPhrase": "Tai nghe bluetooth",
     "refinements": [{
         "attribute_id": "length",
         "value": [1.2]
@@ -168,7 +163,11 @@ let searchConfig = {
         "attribute_id": "impedance",
         "value": [32, 17.5]
     }],
+    "searchPhrase": "Tai earbud true wireless",
+    "searchDictionary": {
+        "synonyms": [["SẠC DỰ PHÒNG", "POWERBANK", "PIN DỰ PHÒNG"], ["CÁP SẠC", "DÂY SẠC"], ["IPHONE", "LIGHTNING"], ["ANDROID", "SAMSUNG"]]
+    },
     "page": 2
 }
 
-searchDB(searchConfig);
+searchDB(searchConfig)

@@ -28,14 +28,14 @@ function decomposeSearchPhrase (std_search_phrase) {
             compound_keys: removeArrayDuplicate(compound_keys)
         };
     }
-    let unsigned_search = removeVnCharacter(std_search_phrase);
+    let unsigned_search = utils.removeVnCharacter(std_search_phrase);
     let strict_keys = this.generateKeywords(std_search_phrase);
     let ease_keys = this.generateKeywords(unsigned_search);
     let searchDecompsed = {
         strict_match_compound_words: strict_keys.compound_keys,
         strict_match_single_words: strict_keys.single_keys,
-        ease_match_compound_words: ease_keys.compound_keys.filter(keyword => std_search_phrase.indexOf(keyword) == -1),
-        ease_match_single_words: ease_keys.single_keys.filter(keyword => std_search_phrase.indexOf(keyword) == -1)
+        ease_match_compound_words: ease_keys.compound_keys,
+        ease_match_single_words: ease_keys.single_keys
     }
     return searchDecompsed;
 }
@@ -48,12 +48,11 @@ function generateDictionaryKey ({ std_search_phrase, searchDictionary }) {
             strict_match_single_words: []
         };
 
-        let unsigned_search = utils.removeVnCharacter(std_search_phrase);
-
-        if (searchPhrase && searchDictionary && searchDictionary.synonyms) {
+        if (std_search_phrase && searchDictionary && searchDictionary.synonyms) {
             // The searchDictionary keywords need to be trimmed & transformed to uppercase
             // when it is loaded at the database connection phase. We will not trim and transform here
             // because it will costs calculation in every search request if we do so
+            let unsigned_search = utils.removeVnCharacter(std_search_phrase);
             let synonyms = searchDictionary.synonyms;
             synonyms.forEach(group => {
                 let isMatch = group.some(keyword => {
@@ -88,10 +87,13 @@ function generateFulltextSqlSearchProductEntity ({ searchPhrase, searchDictionar
         if(!compare_mode || !table || !keywords || keywords.length < 1) return null;
         let sql = [];
         keywords.forEach(key => {
-            sql.push(`SELECT entity_id, ${weight} AS \`weight\` 
+            sql.push(
+            `
+            SELECT entity_id, ${weight} AS \`weight\` 
             FROM \`ecommerce\`.\`${table}\` 
-            WHERE attribute_id=\'name\' AND UPPER(value) ${compare_mode} "${prefix}${mysqlutil.escapeQuotes(key)}${postfix}" 
-            GROUP BY \`weight\``);
+            WHERE attribute_id=\'name\' AND UPPER(value) ${compare_mode} \'${prefix}${mysqlutil.escapeQuotes(key)}${postfix}\'
+            `
+            );
         });
         sql = sql.join(" UNION ALL ");
         // there possibly null or empty sql returned, we will filter those out later
@@ -147,8 +149,6 @@ function generateFulltextSqlSearchProductEntity ({ searchPhrase, searchDictionar
     sqlArr = sqlArr.filter(item => (item != null && item.length > 0));
     if(sqlArr.length < 1) return null;
     sqlArr = sqlArr.join(" UNION ALL ");
-    sqlArr = `SELECT GROUP_CONCAT(entity_id) as entity_ids, \`weight\` 
-    FROM (${sqlArr}) AS \`summary\` GROUP BY \`weight\`;`;
     return sqlArr;
 }
 
@@ -187,5 +187,5 @@ function sortProductEntitiesBySignificantWeight (rowData) {
 
 module.exports = {
     generateFulltextSqlSearchProductEntity,
-    sortProductEntitiesBySignificantWeight,
+    sortProductEntitiesBySignificantWeight
 }
