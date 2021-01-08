@@ -89,7 +89,7 @@ function generateFulltextSqlSearchProductEntity ({ searchPhrase, searchDictionar
         keywords.forEach(key => {
             sql.push(
             `
-            SELECT entity_id, ${weight} AS \`weight\` 
+            SELECT entity_id, ${weight} AS \`weight\`, \'name\' AS \`type\`
             FROM \`ecommerce\`.\`${table}\` 
             WHERE attribute_id=\'name\' AND UPPER(value) ${compare_mode} \'${prefix}${mysqlutil.escapeQuotes(key)}${postfix}\'
             `
@@ -152,26 +152,6 @@ function generateFulltextSqlSearchProductEntity ({ searchPhrase, searchDictionar
     return sqlArr;
 }
 
-function sortProductEntitiesBySignificantWeight (rowData) {
-    let found_entities = [];
-    rowData.forEach(row => {
-        let found_match = found_entities.find(item => item.entity_id == row.entity_id);
-        if(!found_match){
-            found_entities.push({
-                entity_id: row.entity_id,
-                weight: row.weight
-            })
-        }else{
-            found_match.weight += row.weight;
-        }
-    })
-    found_entities.sort((a, b) => {
-        return b.weight - a.weight;
-    });
-    return found_entities;
-}
-
 module.exports = {
-    generateFulltextSqlSearchProductEntity,
-    sortProductEntitiesBySignificantWeight
+    generateFulltextSqlSearchProductEntity
 }
