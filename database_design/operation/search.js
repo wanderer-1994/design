@@ -54,7 +54,7 @@ async function searchM24 ({ categories, product_ids, refinements, searchPhrase, 
     let end = Date.now();
     console.log("search query took: ", end - start, " ms");
     M24.end();
-    return grouped_data;
+    return final_product_entities;
 };
 
 let searchConfigDB = {
@@ -80,10 +80,10 @@ let searchConfigDB = {
 };
 
 let searchConfigM24 = {
-    "categories": ["6"],
+    "categories": ["8"],
     "refinements": [{
         "attribute_id": "73",
-        "value": ["Strive Shoulder Pack", "Sprite Foam Roller"]
+        "value": ["Dash Digital Watch", "Bolo Sport Watch", "Didi Sport Watch"]
     },
     {
         "attribute_id": "106",
@@ -91,9 +91,9 @@ let searchConfigM24 = {
     },
     {
         "attribute_id": "89",
-        "value": ["/m/b/mb04-black-0.jpg", "/w/b/wb03-purple-0.jpg", "/l/u/luma-foam-roller.jpg"]
+        "value": ["/m/g/mg02-bk-0.jpg", "/w/g/wg01-bk-0.jpg", "/w/g/wg02-bk-0.jpg"]
     }],
-    "searchPhrase":  "Driven Backpack",
+    "searchPhrase":  "Bolo Sport Watch Dash Digital",
     "page": 2
 };
 

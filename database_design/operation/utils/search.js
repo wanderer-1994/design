@@ -277,13 +277,47 @@ function sortProductEntitiesBySignificantWeight (rowData) {
 
 function finalFilterProductEntities (grouped_data) {
     let by_all = grouped_data.find(group => group.type == "all");
-    if (by_all) return by_all.__items;
     let by_entity_id = grouped_data.find(group => group.type == "entity_id");
-    if (by_entity_id) return by_entity_id.__items;
     let by_category = grouped_data.find(group => group.type == "category");
-    if (by_category) {
-        let by_entity_id
-    }
+    let by_name = grouped_data.find(group => group.type == "name");
+    let by_attribute = grouped_data.find(group => group.type == "attribute");
+    let result = [];
+    // concat all records first
+    if (by_all && by_all.__items) {
+        console.log("yes ", 1)
+        result = result.concat(by_all.__items);
+    };
+    if (by_entity_id && by_entity_id.__items) {
+        console.log("yes ", 2)
+        result = result.concat(by_entity_id.__items);
+    };
+    if (by_category && by_category.__items) {
+        console.log("yes ", 3)
+        result = result.concat(by_category.__items);
+    };
+    if (by_name && by_name.__items) {
+        console.log("yes ", 4)
+        result = result.concat(by_name.__items);
+    };
+    if (by_attribute && by_attribute.__items) {
+        console.log("yes ", 5)
+        result = result.concat(by_attribute.__items);
+    };
+    // filter out all records that match neither entity_id nor category nor name nor refinements
+    if (by_entity_id && by_entity_id.__items) {
+        result = result.filter(item => by_entity_id.__items.filter(m_item => m_item.entity_id == item.entity_id));
+    };
+    if (by_category && by_category.__items) {
+        result = result.filter(item => by_category.__items.filter(m_item => m_item.entity_id == item.entity_id));
+    };
+    if (by_name && by_name.__items) {
+        result = result.filter(item => by_name.__items.filter(m_item => m_item.entity_id == item.entity_id));
+    };
+    if (by_attribute && by_attribute.__items) {
+        result = result.filter(item => by_attribute.__items.filter(m_item => m_item.entity_id == item.entity_id));
+    };
+    result = sortProductEntitiesBySignificantWeight(result);
+    return result;
 }
 
 module.exports = {
