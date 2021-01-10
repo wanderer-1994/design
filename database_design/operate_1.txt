@@ -1,5 +1,17 @@
 ### Select all product_id (parent) after product search query
-SELECT DISTINCT IF((parent is not null and parent != ''), parent, entity_id) as product_id FROM ecommerce.product_entity where (entity_id in ('PR001', 'PR004', 'PR005') or parent in ('PR001', 'PR004', 'PR005'));
+SELECT DISTINCT IF((parent IS NOT NULL and parent != ''), parent, entity_id) as product_id
+FROM ecommerce.product_entity WHERE (
+    entity_id IN ('PR001', 'PR004', 'PR005')
+);
+
+### 
+SELECT
+IF((`cpsl`.parent_id IS NOT NULL AND `cpsl`.parent_id != ''), `cpsl`.parent_id, `cpe`.entity_id) AS product_id
+FROM `magento24`.catalog_product_entity AS `cpe`
+LEFT JOIN `magento24`.catalog_product_super_link AS `cpsl` ON `cpe`.entity_id = `cpsl`.product_id
+WHERE (
+    `cpe`.entity_id IN ('PR001', 'PR004', 'PR005')
+)
 
 ### Select info of all product entities after find all product_id (parent)
 SELECT `pe`.entity_id, `pe`.product_id, `pe`.type_id, `pe`.value, `attributes`.*  FROM (

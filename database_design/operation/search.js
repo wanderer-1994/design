@@ -27,12 +27,13 @@ async function searchDB ({ categories, product_ids, refinements, searchPhrase, s
     grouped_data.forEach(search_type => {
         search_type.__items = searchutils.sortProductEntitiesBySignificantWeight(search_type.__items)
     })
+    let final_product_entities = searchutils.finalFilterProductEntities(grouped_data);
     // search product_ids
     // search all product data by product_ids
     let end = Date.now();
     console.log("search query took: ", end - start, " ms");
     DB.end();
-    return grouped_data;
+    return final_product_entities;
 };
 
 async function searchM24 ({ categories, product_ids, refinements, searchPhrase, searchDictionary, page }) {
@@ -40,21 +41,39 @@ async function searchM24 ({ categories, product_ids, refinements, searchPhrase, 
     let start = Date.now();
     // search product_entities
     let assembledQuery = searchutils.createSearchQueryM24({ categories, product_ids, refinements, searchPhrase, searchDictionary });
+    console.log(assembledQuery);
     let rowData = await M24.promiseQuery(assembledQuery);
-    let grouped_data = mysqlutil.groupByAttribute({
-        rawData: rowData,
-        groupBy: "type"
-    })
-    grouped_data.forEach(search_type => {
-        search_type.__items = searchutils.sortProductEntitiesBySignificantWeight(search_type.__items)
-    });
-    let final_product_entities = searchutils.finalFilterProductEntities(grouped_data);
-    // search product_ids
+    // let grouped_data = mysqlutil.groupByAttribute({
+    //     rawData: rowData,
+    //     groupBy: "type"
+    // })
+    // grouped_data.forEach(search_type => {
+    //     search_type.__items = searchutils.sortProductEntitiesBySignificantWeight(search_type.__items)
+    // });
+    // let final_product_entities = searchutils.finalFilterProductEntities(grouped_data);
+    // // search product_ids
+    // if (final_product_entities.length < 1) {
+    //     return [];
+    // };
+    // let entity_list = final_product_entities.map(item => mysqlutil.escapeQuotes(item.entity_id.toString())).join("\', \'");
+    // let productQuery =
+    // `
+    // SELECT
+    // IF((\`cpsl\`.parent_id IS NOT NULL AND \`cpsl\`.parent_id != ''), \`cpsl\`.parent_id, \`cpe\`.entity_id) AS product_id
+    // FROM \`magento24\`.catalog_product_entity AS \`cpe\`
+    // LEFT JOIN \`magento24\`.catalog_product_super_link AS \`cpsl\` ON \`cpe\`.entity_id = \`cpsl\`.product_id
+    // WHERE (
+    //     \`cpe\`.entity_id IN ('${entity_list}')
+    // )
+    // ORDER BY FIELD(\`cpe\`.entity_id, '${entity_list}')
+    // `;
+    // let productId_list = await M24.promiseQuery(productQuery);
     // search all product data by product_ids
     let end = Date.now();
     console.log("search query took: ", end - start, " ms");
     M24.end();
-    return final_product_entities;
+    // return final_product_entities;
+    return rowData;
 };
 
 let searchConfigDB = {
@@ -80,6 +99,7 @@ let searchConfigDB = {
 };
 
 let searchConfigM24 = {
+    // "product_ids": ["53", "77"]
     "categories": ["8"],
     "refinements": [{
         "attribute_id": "73",
@@ -94,7 +114,7 @@ let searchConfigM24 = {
         "value": ["/m/g/mg02-bk-0.jpg", "/w/g/wg01-bk-0.jpg", "/w/g/wg02-bk-0.jpg"]
     }],
     "searchPhrase":  "Bolo Sport Watch Dash Digital",
-    "page": 2
+    // "page": 2
 };
 
 (async () => {

@@ -122,11 +122,25 @@ function createSearchQueryDB ({ categories, product_ids, refinements, searchPhra
     }
     // ## final assembled search query
     let assembledQuery = [queryCID, queryPID, queryRefinement, querySearchPhrase]
-    .filter(item => (item != null && item != ""))
-    .join(" UNION ALL ");
+    .filter(item => (item != null && item != ""));
     
     if (assembledQuery.length == 0) {
-        assembledQuery = `SELECT entity_id, 1 AS \`weight\` FROM \`ecommerce\`.product_entity`;
+        assembledQuery = 
+        `
+        SELECT IF(parent, parent, entity_id) AS product_id, entity_id, 1 AS \`weight\`
+        FROM \`ecommerce\`.product_entity
+        `;
+    } else {
+        assembledQuery = 
+        `
+        SELECT IF(\`pe\`.parent, \`pe.parent\`, \`alias3\`.entity_id) AS \`product_id\`,
+        \`alias3\.*
+        FROM (
+            ${assembledQuery.join(" UNION ALL ")}
+        ) AS \`alias3\`
+        LEFT JOIN \`ecommerce\`.product_entity AS \`pe\`
+        ON \`pe\`.entity_id = \`alias3\`.entity_id
+        `
     }
 
     return assembledQuery;
@@ -249,21 +263,40 @@ function createSearchQueryM24 ({ categories, product_ids, refinements, searchPhr
     // ## final assembled search query
     let assembledQuery = [queryCID, queryPID, queryRefinement, querySearchPhrase]
     .filter(item => (item != null && item != ""))
-    .join(" UNION ALL ");
     
     if (assembledQuery.length == 0) {
-        assembledQuery = `SELECT entity_id, 1 AS \`weight\`, \'all\' AS \`type\` FROM \`magento24\`.catalog_product_entity`;
+        assembledQuery = 
+        `
+        SELECT
+        IF(\`cpsl\`.parent_id, \`cpsl\`.parent_id, \`pe\`.entity_id) AS \`product_id\`
+        \`pe\`.entity_id, 1 AS \`weight\`, \'all\' AS \`type\`
+        FROM \`magento24\`.catalog_product_entity AS \`pe\`
+        LEFT JOIN \`magento24\`.catalog_product_super_link AS \`cpsl\`
+        ON \`pe\`.entity_id = \`cpsl\`.product_id
+        `;
+    } else {
+        assembledQuery =
+        `
+        SELECT IF(\`cpsl\`.parent_id, \`cpsl\`.parent_id, \`alias3\`.entity_id) AS \`product_id\`,
+        \`alias3\`.*
+        FROM (
+            ${assembledQuery.join(" UNION ALL ")}
+        ) as \`alias3\`
+        LEFT JOIN \`magento24\`.catalog_product_super_link AS \`cpsl\`
+        ON \`alias3\`.entity_id = \`cpsl\`.product_id
+        `
     }
 
     return assembledQuery;
 };
 
 function sortProductEntitiesBySignificantWeight (rowData) {
-    let found_entities = [];
+    let found_products = [];
     rowData.forEach(row => {
-        let found_match = found_entities.find(item => item.entity_id == row.entity_id);
+        let found_match = found_products.find(item => item.product_id == row.product_id);
         if(!found_match){
-            found_entities.push({
+            found_products.push({
+                product_id: row.product_id,
                 entity_id: row.entity_id,
                 weight: row.weight
             })
@@ -271,10 +304,10 @@ function sortProductEntitiesBySignificantWeight (rowData) {
             found_match.weight += row.weight;
         }
     })
-    found_entities.sort((a, b) => {
+    found_products.sort((a, b) => {
         return b.weight - a.weight;
     });
-    return found_entities;
+    return found_products;
 };
 
 function finalFilterProductEntities (grouped_data) {
