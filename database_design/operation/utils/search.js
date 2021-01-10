@@ -59,7 +59,8 @@ function createSearchQueryDB ({ categories, product_ids, refinements, searchPhra
             FROM \`ecommerce\`.category_entity AS \`p\`
             INNER JOIN cte ON \`p\`.parent = \`cte\`.entity_id
         )
-        SELECT \`pca\`.product_id AS \`entity_id\`, 100 AS \`weight\`, \'category\' AS \`type\`
+        SELECT \`pca\`.product_id AS \`entity_id\`,
+        IF(\`pca\`.position IS NOT NULL, 100 + \`pca\`.position, 100) AS \`weight\`, \'category\' AS \`type\`
         FROM \`ecommerce\`.product_category_assignment AS \`pca\`
         INNER JOIN \`ecommerce\`.product_entity AS \`pe\` ON \`pe\`.entity_id = \`pca\`.product_id
         WHERE \`pca\`.category_id IN(SELECT DISTINCT entity_id FROM \`cte\`)
@@ -188,7 +189,8 @@ function createSearchQueryM24 ({ categories, product_ids, refinements, searchPhr
             FROM \`magento24\`.catalog_category_entity AS \`p\`
             INNER JOIN cte ON \`p\`.parent_id = \`cte\`.entity_id
         )
-        SELECT \`pca\`.product_id AS \`entity_id\`, 100 AS \`weight\`, \'category\' AS \`type\`
+        SELECT \`pca\`.product_id AS \`entity_id\`,
+        IF(\`pca\`.position IS NOT NULL, 100 + \`pca\`.position, 100) AS \`weight\`, \'category\' AS \`type\`
         FROM \`magento24\`.catalog_category_product AS \`pca\`
         INNER JOIN \`magento24\`.catalog_product_entity AS \`pe\` ON \`pe\`.entity_id = \`pca\`.product_id
         WHERE \`pca\`.category_id IN(SELECT DISTINCT entity_id FROM \`cte\`)
@@ -305,16 +307,16 @@ function finalFilterProductEntities (grouped_data) {
     };
     // filter out all records that match neither entity_id nor category nor name nor refinements
     if (by_entity_id && by_entity_id.__items) {
-        result = result.filter(item => by_entity_id.__items.filter(m_item => m_item.entity_id == item.entity_id));
+        result = result.filter(item => by_entity_id.__items.find(m_item => m_item.entity_id == item.entity_id));
     };
     if (by_category && by_category.__items) {
-        result = result.filter(item => by_category.__items.filter(m_item => m_item.entity_id == item.entity_id));
+        result = result.filter(item => by_category.__items.find(m_item => m_item.entity_id == item.entity_id));
     };
     if (by_name && by_name.__items) {
-        result = result.filter(item => by_name.__items.filter(m_item => m_item.entity_id == item.entity_id));
+        result = result.filter(item => by_name.__items.find(m_item => m_item.entity_id == item.entity_id));
     };
     if (by_attribute && by_attribute.__items) {
-        result = result.filter(item => by_attribute.__items.filter(m_item => m_item.entity_id == item.entity_id));
+        result = result.filter(item => by_attribute.__items.find(m_item => m_item.entity_id == item.entity_id));
     };
     result = sortProductEntitiesBySignificantWeight(result);
     return result;
