@@ -230,30 +230,42 @@ function createSearchQueryM24 ({ categories, product_ids, refinements, searchPhr
         queryRefinement =
         `
         SELECT entity_id, 10*${refinements.length} AS \`weight\`, \'attribute\' AS \`type\` FROM
-        (   SELECT entity_id, GROUP_CONCAT(attribute_id) AS attribute_ids FROM
-            (   SELECT \`eav\`.entity_id, \`eav\`.attribute_id
-                FROM \`magento24\`.\`catalog_product_entity_varchar\` AS \`eav\`
-                WHERE ${refinementComponentQueries}
-            UNION ALL
-                SELECT \`eav\`.entity_id, \`eav\`.attribute_id
-                FROM \`magento24\`.\`catalog_product_entity_text\` AS \`eav\`
-                WHERE ${refinementComponentQueries}
-            UNION ALL
-                SELECT \`eav\`.entity_id, \`eav\`.attribute_id
-                FROM \`magento24\`.\`catalog_product_entity_int\` AS \`eav\`
-                WHERE ${refinementComponentQueries}
-            UNION ALL
-                SELECT \`eav\`.entity_id, \`eav\`.attribute_id
-                FROM \`magento24\`.\`catalog_product_entity_decimal\` AS \`eav\`
-                WHERE ${refinementComponentQueries}
-            UNION ALL
-                SELECT \`eav\`.entity_id, \`eav\`.attribute_id
-                FROM \`magento24\`.\`catalog_product_entity_datetime\` AS \`eav\`
-                WHERE ${refinementComponentQueries}
-            ) AS \`alias\` GROUP BY entity_id
-        ) AS \`alias2\`
-        WHERE (${refinements.map(item => `FIND_IN_SET(\'${mysqlutil.escapeQuotes(item.attribute_id)}\', \`alias2\`.attribute_ids)`).join(" AND ")})
+        (   SELECT \`alias2\`.entity_id,
+            IF(\`alias2_rep\`.entity_id, CONCAT_WS(',', \`alias2\`.attribute_ids, \`alias2_rep\`.attribute_ids), \`alias2\`.attribute_ids) AS attribute_ids
+            FROM
+            (   SELECT \`alias1\`.entity_id, \`alias1\`.attribute_ids,
+                IF(\`cpsl\`.parent_id, \`cpsl\`.parent_id, \`alias1\`.entity_id) AS parent
+                FROM  
+                (   SELECT entity_id, GROUP_CONCAT(attribute_id) AS attribute_ids FROM
+                    (   SELECT \`eav\`.entity_id, \`eav\`.attribute_id
+                        FROM \`magento24\`.\`catalog_product_entity_varchar\` AS \`eav\`
+                        WHERE ${refinementComponentQueries}
+                    UNION ALL
+                        SELECT \`eav\`.entity_id, \`eav\`.attribute_id
+                        FROM \`magento24\`.\`catalog_product_entity_text\` AS \`eav\`
+                        WHERE ${refinementComponentQueries}
+                    UNION ALL
+                        SELECT \`eav\`.entity_id, \`eav\`.attribute_id
+                        FROM \`magento24\`.\`catalog_product_entity_int\` AS \`eav\`
+                        WHERE ${refinementComponentQueries}
+                    UNION ALL
+                        SELECT \`eav\`.entity_id, \`eav\`.attribute_id
+                        FROM \`magento24\`.\`catalog_product_entity_decimal\` AS \`eav\`
+                        WHERE ${refinementComponentQueries}
+                    UNION ALL
+                        SELECT \`eav\`.entity_id, \`eav\`.attribute_id
+                        FROM \`magento24\`.\`catalog_product_entity_datetime\` AS \`eav\`
+                        WHERE ${refinementComponentQueries}
+                    ) AS \`alias\` GROUP BY entity_id
+                ) AS \`alias1\`
+                LEFT JOIN \`magento24\`.catalog_product_super_link AS \`cpsl\` ON \`cpsl\`.product_id = \`alias1\`.entity_id
+            ) AS \`alias2\`
+            LEFT JOIN \`alias2\` AS \`alias2_rep\`
+            ON (\`alias2.\`parent != \`alias2.\`entity_id AND \`alias2.\`parent = \`alias2_rep\`.parent AND \`alias2_rep\`.parent = \`alias2_rep\`.entity_id)
+        ) AS \`alias3\`
+        WHERE (${refinements.map(item => `FIND_IN_SET(\'${mysqlutil.escapeQuotes(item.attribute_id)}\', \`alias3\`.attribute_ids)`).join(" AND ")})
         `;
+        console.log(queryRefinement);
     }
     // ## search by search phrase
     let querySearchPhrase = "";
@@ -297,7 +309,6 @@ function sortProductEntitiesBySignificantWeight (rowData) {
         if(!found_match){
             found_products.push({
                 product_id: row.product_id,
-                entity_id: row.entity_id,
                 weight: row.weight
             })
         }else{
@@ -340,16 +351,16 @@ function finalFilterProductEntities (grouped_data) {
     };
     // filter out all records that match neither entity_id nor category nor name nor refinements
     if (by_entity_id && by_entity_id.__items) {
-        result = result.filter(item => by_entity_id.__items.find(m_item => m_item.entity_id == item.entity_id));
+        result = result.filter(item => by_entity_id.__items.find(m_item => m_item.product_id == item.product_id));
     };
     if (by_category && by_category.__items) {
-        result = result.filter(item => by_category.__items.find(m_item => m_item.entity_id == item.entity_id));
+        result = result.filter(item => by_category.__items.find(m_item => m_item.product_id == item.product_id));
     };
     if (by_name && by_name.__items) {
-        result = result.filter(item => by_name.__items.find(m_item => m_item.entity_id == item.entity_id));
+        result = result.filter(item => by_name.__items.find(m_item => m_item.product_id == item.product_id));
     };
     if (by_attribute && by_attribute.__items) {
-        result = result.filter(item => by_attribute.__items.find(m_item => m_item.entity_id == item.entity_id));
+        result = result.filter(item => by_attribute.__items.find(m_item => m_item.product_id == item.product_id));
     };
     result = sortProductEntitiesBySignificantWeight(result);
     return result;
