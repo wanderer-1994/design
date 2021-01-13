@@ -53,7 +53,6 @@ async function searchM24 ({ categories, product_ids, refinements, searchPhrase, 
     let end = Date.now();
     console.log("search query took: ", end - start, " ms");
     M24.end();
-    // return final_product_entities;
     return final_product_entities;
 };
 
