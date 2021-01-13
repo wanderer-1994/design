@@ -297,7 +297,6 @@ function sortProductEntitiesBySignificantWeight (rowData) {
         if(!found_match){
             found_products.push({
                 product_id: row.product_id,
-                entity_id: row.entity_id,
                 weight: row.weight
             })
         }else{
@@ -340,16 +339,16 @@ function finalFilterProductEntities (grouped_data) {
     };
     // filter out all records that match neither entity_id nor category nor name nor refinements
     if (by_entity_id && by_entity_id.__items) {
-        result = result.filter(item => by_entity_id.__items.find(m_item => m_item.entity_id == item.entity_id));
+        result = result.filter(item => by_entity_id.__items.find(m_item => m_item.product_id == item.product_id));
     };
     if (by_category && by_category.__items) {
-        result = result.filter(item => by_category.__items.find(m_item => m_item.entity_id == item.entity_id));
+        result = result.filter(item => by_category.__items.find(m_item => m_item.product_id == item.product_id));
     };
     if (by_name && by_name.__items) {
-        result = result.filter(item => by_name.__items.find(m_item => m_item.entity_id == item.entity_id));
+        result = result.filter(item => by_name.__items.find(m_item => m_item.product_id == item.product_id));
     };
     if (by_attribute && by_attribute.__items) {
-        result = result.filter(item => by_attribute.__items.find(m_item => m_item.entity_id == item.entity_id));
+        result = result.filter(item => by_attribute.__items.find(m_item => m_item.product_id == item.product_id));
     };
     result = sortProductEntitiesBySignificantWeight(result);
     return result;
