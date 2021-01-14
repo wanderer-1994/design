@@ -50,6 +50,14 @@ CREATE TABLE `ecommerce`.`product_eav_multi_value` (
   `sort_order`  INT NULL);
 
 ###
+CREATE TABLE `ecommerce`.`product_eav_index` (
+  `option_id` INT NOT NULL AUTO_INCREMENT,
+  `attribute_id` VARCHAR(50) NOT NULL,
+  `value` VARCHAR(255) NOT NULL,
+  `sort_order`  INT NULL,
+  PRIMARY KEY (`option_id`, `attribute_id`));
+
+###
 CREATE TABLE `ecommerce`.`product_eav_int` (
   `entity_id` VARCHAR(50) NOT NULL,
   `attribute_id` VARCHAR(50) NOT NULL,
