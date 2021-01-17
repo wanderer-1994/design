@@ -228,52 +228,57 @@ async function modelizeM24ProductsData () {
     }
 }
 
-async function selectProductsData () {
+async function selectProductsData (entity_ids) {
     try {
         const DB = await mysqlutil.generateConnection(sqlDBConfig);
         await DB.promiseQuery("USE `ecommerce`;");
+        let entity_query = '';
+        if (entity_ids && entity_ids.length > 0) {
+            entity_query = entity_ids.map(item => `'${mysqlutil.escapeQuotes(item)}'`).join(', ');
+            entity_query = `WHERE \`pe\`.entity_id IN (${entity_query}) OR \`pe\`.parent IN (${entity_query})`;
+        }
         let query = `SELECT \`pe\`.entity_id, \`pe\`.product_id, \`pe\`.type_id, \`pe\`.value, \`attributes\`.*  FROM (
             SELECT
                 \`pe\`.entity_id, IF((\`pe\`.parent is not null and \`pe\`.parent != \'\'), \`pe\`.parent, \`pe\`.entity_id) as product_id,
                 \`pe\`.type_id, \`eav\`.attribute_id, \`eav\`.value
             FROM \`ecommerce\`.product_entity as \`pe\`
             LEFT JOIN \`ecommerce\`.product_eav_int as \`eav\` ON \`eav\`.entity_id = \`pe\`.entity_id
-            WHERE \`pe\`.entity_id in (\'PR001\', \'PR002\') or \`pe\`.parent in (\'PR001\', \'PR002\')
+            ${entity_query}
             UNION
             SELECT
                 \`pe\`.entity_id, IF((\`pe\`.parent is not null and \`pe\`.parent != \'\'), \`pe\`.parent, \`pe\`.entity_id) as product_id,
                 \`pe\`.type_id, \`eav\`.attribute_id, \`eav\`.value
             FROM \`ecommerce\`.product_entity as \`pe\`
             LEFT JOIN \`ecommerce\`.product_eav_decimal as \`eav\` ON \`eav\`.entity_id = \`pe\`.entity_id
-            WHERE \`pe\`.entity_id in (\'PR001\', \'PR002\') or \`pe\`.parent in (\'PR001\', \'PR002\')
+            ${entity_query}
             UNION
             SELECT
                 \`pe\`.entity_id, IF((\`pe\`.parent is not null and \`pe\`.parent != \'\'), \`pe\`.parent, \`pe\`.entity_id) as product_id,
                 \`pe\`.type_id, \`eav\`.attribute_id, \`eav\`.value
             FROM \`ecommerce\`.product_entity as \`pe\`
             LEFT JOIN \`ecommerce\`.product_eav_varchar as \`eav\` ON \`eav\`.entity_id = \`pe\`.entity_id
-            WHERE \`pe\`.entity_id in (\'PR001\', \'PR002\') or \`pe\`.parent in (\'PR001\', \'PR002\')
+            ${entity_query}
             UNION
             SELECT
                 \`pe\`.entity_id, IF((\`pe\`.parent is not null and \`pe\`.parent != \'\'), \`pe\`.parent, \`pe\`.entity_id) as product_id,
                 \`pe\`.type_id, \`eav\`.attribute_id, \`eav\`.value
             FROM \`ecommerce\`.product_entity as \`pe\`
             LEFT JOIN \`ecommerce\`.product_eav_text as \`eav\` ON \`eav\`.entity_id = \`pe\`.entity_id
-            WHERE \`pe\`.entity_id in (\'PR001\', \'PR002\') or \`pe\`.parent in (\'PR001\', \'PR002\')
+            ${entity_query}
             UNION
             SELECT
                 \`pe\`.entity_id, IF((\`pe\`.parent is not null and \`pe\`.parent != \'\'), \`pe\`.parent, \`pe\`.entity_id) as product_id,
                 \`pe\`.type_id, \`eav\`.attribute_id, \`eav\`.value
             FROM \`ecommerce\`.product_entity as \`pe\`
             LEFT JOIN \`ecommerce\`.product_eav_datetime as \`eav\` ON \`eav\`.entity_id = \`pe\`.entity_id
-            WHERE \`pe\`.entity_id in (\'PR001\', \'PR002\') or \`pe\`.parent in (\'PR001\', \'PR002\')
+            ${entity_query}
             UNION
             SELECT
                 \`pe\`.entity_id, IF((\`pe\`.parent is not null and \`pe\`.parent != \'\'), \`pe\`.parent, \`pe\`.entity_id) as product_id,
                 \`pe\`.type_id, \`eav\`.attribute_id, \`eav\`.value
             FROM \`ecommerce\`.product_entity as \`pe\`
             LEFT JOIN \`ecommerce\`.product_eav_multi_value as \`eav\` ON \`eav\`.entity_id = \`pe\`.entity_id
-            WHERE \`pe\`.entity_id in (\'PR001\', \'PR002\') or \`pe\`.parent in (\'PR001\', \'PR002\')
+            ${entity_query}
         ) as \`pe\`
         LEFT JOIN \`ecommerce\`.product_eav as \`attributes\` ON \`attributes\`.attribute_id = \`pe\`.attribute_id
         ORDER BY \`pe\`.product_id, \`pe\`.entity_id`;
@@ -363,9 +368,17 @@ function modelizeProductsData (rawData) {
 }
 
 async function getProductsDB () {
+    let rawData = await selectProductsData(['PR001', 'PR002']);
+    let products = modelizeProductsData(rawData);
+    console.log(products);
+    // await fs.writeJSON("../DBproducts.json", products);
+}
+
+async function buildProductEavIndex () {
     let rawData = await selectProductsData();
     let products = modelizeProductsData(rawData);
-    // await fs.writeJSON("../DBproducts.json", products);
+    let product_eav_index = mysqlutil.buildProductEavIndex(products);
+    console.log(product_eav_index);
 }
 
 async function test () {
@@ -388,5 +401,5 @@ async function getProductsCache () {
 }
 
 // modelizeM24ProductsData()
-// getProductsCache()
+buildProductEavIndex()
 

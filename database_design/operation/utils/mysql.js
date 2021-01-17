@@ -60,9 +60,64 @@ function escapeQuotes (string) {
     return string.replace(/\`/g, "\\`").replace(/\"/g, '\\"').replace(/\'/g, "\\'");
 }
 
+function buildProductEavIndex (products) {
+    let eav_index_list = [];
+    let entity_list = [];
+    products.forEach(product => {
+        if (product.self) {
+            product.self.product_id = product.product_id;
+            entity_list.push(product.self);
+        }
+        if (product.parent) {
+            product.parent.product_id = product.product_id;
+            entity_list.push(product.parent);
+        }
+        if (product.variants) {
+            product.variants.forEach(variant => {
+                variant.product_id = product.product_id;
+            });
+            entity_list = [...entity_list, ...product.variants];
+        }
+    })
+    entity_list.forEach(entity => {
+        if (entity.attributes) {
+            entity.attributes.forEach(attribute => {
+                if (
+                    attribute.html_type == "select" ||
+                    attribute.html_type == "multiselect" ||
+                    attribute.data_type == "boolean"
+                ) {
+                    let value = attribute.value;
+                    if (!Array.isArray(value)) {
+                        value = [value];
+                    }
+                    value.forEach(v_item => {
+                        let eav_index = {
+                            entity_id: entity.entity_id,
+                            product_id: entity.product_id,
+                            attribute_id: attribute.attribute_id,
+                            value: v_item
+                        };
+                        let match = eav_index_list.find(item => (
+                            item.product_id == eav_index.product_id &&
+                            item.attribute_id == eav_index.attribute_id &&
+                            item.value == eav_index.value
+                        ));
+                        if (!match) {
+                            eav_index_list.push(eav_index);
+                        }
+                    })
+                }
+            })
+        }
+    })
+    return eav_index_list;
+}
+
 module.exports = {
     generateConnection,
     separateSQL,
     groupByAttribute,
-    escapeQuotes
+    escapeQuotes,
+    buildProductEavIndex
 }
