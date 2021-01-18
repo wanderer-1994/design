@@ -9,9 +9,9 @@ var sqlDBConfig = {
 }
 
 async function searchDB ({ categories, entity_ids, refinements, searchPhrase, searchDictionary, page }) {
-    let start = Date.now();
     let required = searchutils.searchConfigValidation({ categories, entity_ids, refinements, searchPhrase });
     const DB = await mysqlutil.generateConnection(sqlDBConfig);
+    let start = Date.now();
     if (refinements && refinements.length > 0) {
         // validate refinements contains searchable attributes only
         let product_eav = await DB.promiseQuery(`SELECT * FROM \`ecommerce\`.product_eav`);
