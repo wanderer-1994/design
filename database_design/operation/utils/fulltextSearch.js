@@ -89,7 +89,7 @@ function generateFulltextSqlSearchProductEntity ({ searchPhrase, searchDictionar
         keywords.forEach(key => {
             sql.push(
             `
-            SELECT entity_id, ${weight} AS \`weight\`, \'name\' AS \`type\`
+            SELECT entity_id, ${weight} AS \`weight\`
             FROM \`ecommerce\`.\`${table}\` 
             WHERE attribute_id=\'name\' AND UPPER(value) ${compare_mode} \'${prefix}${mysqlutil.escapeQuotes(key)}${postfix}\'
             `
@@ -148,7 +148,21 @@ function generateFulltextSqlSearchProductEntity ({ searchPhrase, searchDictionar
     }
     sqlArr = sqlArr.filter(item => (item != null && item.length > 0));
     if(sqlArr.length < 1) return null;
-    sqlArr = sqlArr.join(" UNION ALL ");
+    sqlArr =
+    `
+    SELECT product_id, MAX(weight) AS weight, \'name\' AS \`type\` FROM (
+        SELECT IF(\`pe\`.parent IS NOT NULL AND \`pe\`.parent != '', \`pe\`.parent, \`pe\`.entity_id) AS \`product_id\`, weight
+        FROM (
+            SELECT entity_id, SUM(weight) AS weight
+            FROM (
+                ${sqlArr.join(" UNION ALL ")}
+            ) AS \`alias\`
+            GROUP BY entity_id
+        ) AS \`alias2\`
+        INNER JOIN \`ecommerce\`.product_entity AS \`pe\` ON \`pe\`.entity_id = \`alias2\`.entity_id
+    ) AS \`alias3\`
+    GROUP BY product_id
+    `;
     return sqlArr;
 }
 

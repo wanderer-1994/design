@@ -3,7 +3,6 @@ const fulltextSearch = require("./fulltextSearch");
 const fulltextSearchM24 = require("./fulltextSearchM24");
 
 function createSearchQueryDB ({ categories, entity_ids, refinements, searchPhrase, searchDictionary }) {
-    // SEARCH entity_ids ORDERED BY RANKING
     // ## search by category_id
     let queryCID = "";
     if (categories && categories.length > 0) {
@@ -18,21 +17,29 @@ function createSearchQueryDB ({ categories, entity_ids, refinements, searchPhras
             FROM \`ecommerce\`.category_entity AS \`p\`
             INNER JOIN \`cte\` ON \`p\`.parent = \`cte\`.entity_id
         )
-        SELECT \`pca\`.product_id AS \`entity_id\`,
-        IF(\`pca\`.position IS NOT NULL, 100 + \`pca\`.position, 100) AS \`weight\`, \'category\' AS \`type\`
-        FROM \`ecommerce\`.product_category_assignment AS \`pca\`
-        INNER JOIN \`ecommerce\`.product_entity AS \`pe\` ON \`pe\`.entity_id = \`pca\`.product_id
-        WHERE \`pca\`.category_id IN(SELECT DISTINCT entity_id FROM \`cte\`)
+        SELECT product_id, MAX(weight) AS weight, \'category\' AS \`type\` FROM (
+            SELECT
+            IF(\`pe\`.parent IS NOT NULL AND \`pe\`.parent != '', \`pe\`.parent, \`pe\`.entity_id) AS product_id,
+            IF(\`pca\`.position IS NOT NULL, 100 + \`pca\`.position, 100) AS \`weight\`
+            FROM \`ecommerce\`.product_category_assignment AS \`pca\`
+            INNER JOIN \`ecommerce\`.product_entity AS \`pe\` ON \`pe\`.entity_id = \`pca\`.product_id
+            WHERE \`pca\`.category_id IN(SELECT DISTINCT entity_id FROM \`cte\`)
+        ) as \`alias\`
+        GROUP BY product_id
         `;
     }
-    // ## search by product_id
+    // ## search by entity_ids
     let queryPID = ""
     if (entity_ids && entity_ids.length > 0) {
         queryPID =
         `
-        SELECT \`pe\`.entity_id, 1000 AS \`weight\`, \'entity_id\' AS \`type\`
-        FROM \`ecommerce\`.\`product_entity\` AS \`pe\`
-        WHERE \`pe\`.entity_id IN (\'${entity_ids.map(item => mysqlutil.escapeQuotes(item)).join("\', \'")}\')
+        SELECT product_id, MAX(weight) AS weight, \'entity_id\' AS \`type\` FROM (
+            SELECT IF(\`pe\`.parent IS NOT NULL AND \`pe\`.parent != '', \`pe\`.parent, \`pe\`.entity_id) AS product_id,
+            1000 AS \`weight\`
+            FROM \`ecommerce\`.\`product_entity\` AS \`pe\`
+            WHERE \`pe\`.entity_id IN (\'${entity_ids.map(item => mysqlutil.escapeQuotes(item)).join("\', \'")}\')
+        ) AS \`alias\`
+        GROUP BY product_id
         `;
     }
     // ## search by attribute refinements
@@ -44,12 +51,12 @@ function createSearchQueryDB ({ categories, entity_ids, refinements, searchPhras
         
         queryRefinement =
         `
-        SELECT entity_id, 10*${refinements.length} AS \`weight\`, \'attribute\' AS \`type\` FROM
-        (   SELECT entity_id, GROUP_CONCAT(attribute_id) AS attribute_ids FROM
-            (   SELECT \`eav\`.entity_id, \`eav\`.attribute_id
+        SELECT product_id, 10*${refinements.length} AS \`weight\`, \'attribute\' AS \`type\` FROM
+        (   SELECT product_id, GROUP_CONCAT(attribute_id) AS attribute_ids FROM
+            (   SELECT \`eav\`.product_id, \`eav\`.attribute_id
                 FROM \`ecommerce\`.\`product_eav_index\` AS \`eav\`
                 WHERE ${refinementComponentQueries}
-            ) AS \`alias\` GROUP BY entity_id
+            ) AS \`alias\` GROUP BY product_id
         ) AS \`alias2\`
         WHERE (${refinements.map(item => `FIND_IN_SET('${mysqlutil.escapeQuotes(item.attribute_id)}', \`alias2\`.attribute_ids)`).join(" AND ")})
         `;
@@ -66,20 +73,11 @@ function createSearchQueryDB ({ categories, entity_ids, refinements, searchPhras
     if (assembledQuery.length == 0) {
         assembledQuery = 
         `
-        SELECT IF(parent, parent, entity_id) AS product_id, entity_id, 1 AS \`weight\`
-        FROM \`ecommerce\`.product_entity
+        SELECT entity_id AS product_id, 1 AS \`weight\`, 'all' AS \`type\`
+        FROM \`ecommerce\`.product_entity WHERE parent IS NULL OR parent = ''
         `;
     } else {
-        assembledQuery = 
-        `
-        SELECT IF(\`pe\`.parent, \`pe\`.parent, \`alias3\`.entity_id) AS \`product_id\`,
-        \`alias3\`.*
-        FROM (
-            ${assembledQuery.join(" UNION ALL ")}
-        ) AS \`alias3\`
-        LEFT JOIN \`ecommerce\`.product_entity AS \`pe\`
-        ON \`pe\`.entity_id = \`alias3\`.entity_id
-        `
+        assembledQuery = assembledQuery.join(" UNION ALL ")
     }
 
     return assembledQuery;
@@ -128,20 +126,91 @@ function searchConfigValidation ({ categories, entity_ids, refinements, searchPh
     }
 }
 
-function searchByCategories (categories, DB) {
-
+async function searchByCategories ({ categories, DB }) {
+    try {
+        if (!categories || categories.length < 1) return null;
+        let queryCID =
+        `
+        WITH RECURSIVE \`cte\` (entity_id) AS (
+            SELECT entity_id
+            FROM \`ecommerce\`.category_entity
+            WHERE entity_id IN (\'${categories.map(item => mysqlutil.escapeQuotes(item)).join("\', \'")}\')
+            UNION ALL
+            SELECT p.entity_id
+            FROM \`ecommerce\`.category_entity AS \`p\`
+            INNER JOIN \`cte\` ON \`p\`.parent = \`cte\`.entity_id
+        )
+        SELECT product_id, MAX(weight) AS weight, \'category\' AS \`type\` FROM (
+            SELECT
+            IF(\`pe\`.parent IS NOT NULL AND \`pe\`.parent != '', \`pe\`.parent, \`pe\`.entity_id) AS product_id,
+            IF(\`pca\`.position IS NOT NULL, 100 + \`pca\`.position, 100) AS \`weight\`
+            FROM \`ecommerce\`.product_category_assignment AS \`pca\`
+            INNER JOIN \`ecommerce\`.product_entity AS \`pe\` ON \`pe\`.entity_id = \`pca\`.product_id
+            WHERE \`pca\`.category_id IN(SELECT DISTINCT entity_id FROM \`cte\`)
+        ) as \`alias\`
+        GROUP BY product_id
+        `;
+        let products = await DB.promiseQuery(queryCID);
+        return products;
+    } catch (err) {
+        throw err;
+    }
 }
 
-function searchByEntityIds (entity_ids, DB) {
-
+async function searchByEntityIds ({ entity_ids, DB }) {
+    try {
+        if (!entity_ids || entity_ids.length < 1) return null;
+        let queryPID =
+        `
+        SELECT product_id, MAX(weight) AS weight, \'entity_id\' AS \`type\` FROM (
+            SELECT IF(\`pe\`.parent IS NOT NULL AND \`pe\`.parent != '', \`pe\`.parent, \`pe\`.entity_id) AS product_id,
+            1000 AS \`weight\`
+            FROM \`ecommerce\`.\`product_entity\` AS \`pe\`
+            WHERE \`pe\`.entity_id IN (\'${entity_ids.map(item => mysqlutil.escapeQuotes(item)).join("\', \'")}\')
+        ) AS \`alias\`
+        GROUP BY product_id
+        `;
+        let products = await DB.promiseQuery(queryPID);
+        return products;
+    } catch (err) {
+        throw err;
+    }
 }
 
-function searchByRefinements (refinement, DB) {
-
+async function searchByRefinements ({ refinements, DB }) {
+    try {
+        if (!refinements || refinements.length < 1) return null;
+        let refinementComponentQueries = refinements.map(item => {
+            return `(\`attribute_id\`='${mysqlutil.escapeQuotes(item.attribute_id)}' AND \`value\` IN ('${item.value.map(item => mysqlutil.escapeQuotes(item.toString())).join("\', \'")}'))`
+        }).join(" OR ");
+        
+        queryRefinement =
+        `
+        SELECT product_id, 10*${refinements.length} AS \`weight\`, \'attribute\' AS \`type\` FROM
+        (   SELECT product_id, GROUP_CONCAT(attribute_id) AS attribute_ids FROM
+            (   SELECT \`eav\`.product_id, \`eav\`.attribute_id
+                FROM \`ecommerce\`.\`product_eav_index\` AS \`eav\`
+                WHERE ${refinementComponentQueries}
+            ) AS \`alias\` GROUP BY product_id
+        ) AS \`alias2\`
+        WHERE (${refinements.map(item => `FIND_IN_SET('${mysqlutil.escapeQuotes(item.attribute_id)}', \`alias2\`.attribute_ids)`).join(" AND ")})
+        `;
+        let products = await DB.promiseQuery(queryRefinement);
+        return products;
+    } catch (err) {
+        throw err;
+    }
 }
 
-function searchBySearchPhrase (searchPhrase, searchDictionary, DB) {
-
+async function searchBySearchPhrase ({ searchPhrase, searchDictionary, DB }) {
+    try {
+        if (!searchPhrase || searchPhrase.length < 1) return null;
+        let querySearchPhrase = fulltextSearch.generateFulltextSqlSearchProductEntity({ searchPhrase, searchDictionary });
+        let entities = await DB.promiseQuery(querySearchPhrase);
+        return entities;
+    } catch (err) {
+        throw err;
+    }
 }
 
 function createSearchQueryM24 ({ categories, product_ids, refinements, searchPhrase, searchDictionary }) {
@@ -369,6 +438,7 @@ module.exports = {
     createSearchQueryM24,
     sortProductEntitiesBySignificantWeight,
     finalFilterProductEntities,
+    searchConfigValidation,
     searchByCategories,
     searchByEntityIds,
     searchByRefinements,

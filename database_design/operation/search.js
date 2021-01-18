@@ -15,10 +15,11 @@ var sqlM24Config = {
 }
 
 async function searchDB ({ categories, entity_ids, refinements, searchPhrase, searchDictionary, page }) {
+    let start = Date.now();
     searchutils.searchConfigValidation({ categories, entity_ids, refinements, searchPhrase });
     const DB = await mysqlutil.generateConnection(sqlDBConfig);
     if (refinements && refinements.length > 0) {
-        // validate refinements contains searchable atributes only
+        // validate refinements contains searchable attributes only
         let product_eav = await DB.promiseQuery(`SELECT * FROM \`ecommerce\`.product_eav`);
         refinements.forEach(item => {
             let match = product_eav.find(m_item => m_item.attribute_id == item.attribute_id);
@@ -31,53 +32,13 @@ async function searchDB ({ categories, entity_ids, refinements, searchPhrase, se
         })
     }
 
-    let result = [];
-    
-    if (categories && categories.length > 0) {
-        let cat_search = searchutils.searchByCategories({ categories, DB });
-        if (cat_search) {
-            result.push(cat_search);
-        }
-    }
-
-    if (entity_ids && entity_ids.length > 0) {
-        let entity_search = searchutils.searchByEntityIds({ entity_ids, DB });
-        if (entity_search) {
-            result.push(entity_search);
-        }
-    }
-
-    if (refinements && refinements.length > 0) {
-        let refinement_search = searchutils.searchByRefinements({ refinements, DB });
-        if (refinement_search) {
-            result.push(refinement_search);
-        }
-    }
-
-    if (searchPhrase && searchPhrase.length > 0) {
-        let phrase_search = searchutils.searchBySearchPhrase({ searchPhrase, searchDictionary, DB });
-        if (phrase_search) {
-            result.push(phrase_search);
-        }
-    }
-
-    let start = Date.now();
-    // search product_entities & product_ids
     let assembledQuery = searchutils.createSearchQueryDB({ categories, entity_ids, refinements, searchPhrase, searchDictionary });
-    let rowData = await DB.promiseQuery(assembledQuery);
-    let grouped_data = mysqlutil.groupByAttribute({
-        rawData: rowData,
-        groupBy: "type"
-    })
-    grouped_data.forEach(search_type => {
-        search_type.__items = searchutils.sortProductEntitiesBySignificantWeight(search_type.__items)
-    })
-    let final_product_entities = searchutils.finalFilterProductEntities(grouped_data);
-    // search all product data by product_ids
+    console.log(assembledQuery);
+    let result = await DB.promiseQuery(assembledQuery);
     let end = Date.now();
     console.log("search query took: ", end - start, " ms");
     DB.end();
-    return final_product_entities;
+    return result;
 };
 
 async function searchM24 ({ categories, product_ids, refinements, searchPhrase, searchDictionary, page }) {
@@ -98,25 +59,18 @@ async function searchM24 ({ categories, product_ids, refinements, searchPhrase, 
     let end = Date.now();
     console.log("search query took: ", end - start, " ms");
     M24.end();
-    return final_product_entities;
+    return result;
 };
 
 let searchConfigDB = {
-    "categories": ["earbud", "charge_cable"],
-    "entity_ids": ["PR001", "PR003"],
-    // "refinements": [{
-    //     "attribute_id": "length",
-    //     "value": [1.2]
-    // },
+    // "categories": ["earbud", "charge_cable"],
+    // "entity_ids": ["PR001", "PR003", "PR004"],
+    // "refinements": [
     // {
     //     "attribute_id": "color",
     //     "value": ["Đỏ_#eb3458", "Lam_#eb3458"]
-    // },
-    // {
-    //     "attribute_id": "impedance",
-    //     "value": [32, 17.5]
     // }],
-    // "searchPhrase": "Joust Duffle",
+    // "searchPhrase": "true wireless earbud",
     "searchDictionary": {
         "synonyms": [["SẠC DỰ PHÒNG", "POWERBANK", "PIN DỰ PHÒNG"], ["CÁP SẠC", "DÂY SẠC"], ["IPHONE", "LIGHTNING"], ["ANDROID", "SAMSUNG"]]
     },
