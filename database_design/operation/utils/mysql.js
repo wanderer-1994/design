@@ -60,7 +60,7 @@ function escapeQuotes (string) {
     return string.replace(/\`/g, "\\`").replace(/\"/g, '\\"').replace(/\'/g, "\\'");
 }
 
-function buildProductEavIndex (products) {
+function buildProductEavIndexJson (products) {
     let eav_index_list = [];
     let entity_list = [];
     products.forEach(product => {
@@ -82,11 +82,7 @@ function buildProductEavIndex (products) {
     entity_list.forEach(entity => {
         if (entity.attributes) {
             entity.attributes.forEach(attribute => {
-                if (
-                    attribute.html_type == "select" ||
-                    attribute.html_type == "multiselect" ||
-                    attribute.data_type == "boolean"
-                ) {
+                if (isAttributeSearchable(attribute)) {
                     let value = attribute.value;
                     if (!Array.isArray(value)) {
                         value = [value];
@@ -114,10 +110,22 @@ function buildProductEavIndex (products) {
     return eav_index_list;
 }
 
+function isAttributeSearchable (attribute) {
+    return (
+        attribute.html_type == "select" ||
+        attribute.html_type == "multiselect" ||
+        attribute.data_type == "boolean"
+    ) && (
+        attribute.data_type != "text" &&
+        attribute.data_type != "html"
+    )
+}
+
 module.exports = {
     generateConnection,
     separateSQL,
     groupByAttribute,
     escapeQuotes,
-    buildProductEavIndex
+    buildProductEavIndexJson,
+    isAttributeSearchable
 }

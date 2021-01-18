@@ -1,6 +1,6 @@
 {
     "categories": ["earbud", "charge_cable"],
-    "product_ids": ["PR001", "PR003"],
+    "entity_ids": ["PR001", "PR003"],
     "refinements": [{
         "attribute_id": "length",
         "value": [1.2]

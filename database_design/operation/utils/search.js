@@ -2,8 +2,90 @@ const mysqlutil = require("./mysql");
 const fulltextSearch = require("./fulltextSearch");
 const fulltextSearchM24 = require("./fulltextSearchM24");
 
-function createSearchQueryDB ({ categories, product_ids, refinements, searchPhrase, searchDictionary }) {
-    // SEARCH CONFIG VALIDATION
+function createSearchQueryDB ({ categories, entity_ids, refinements, searchPhrase, searchDictionary }) {
+    // SEARCH entity_ids ORDERED BY RANKING
+    // ## search by category_id
+    let queryCID = "";
+    if (categories && categories.length > 0) {
+        queryCID =
+        `
+        WITH RECURSIVE \`cte\` (entity_id) AS (
+            SELECT entity_id
+            FROM \`ecommerce\`.category_entity
+            WHERE entity_id IN (\'${categories.map(item => mysqlutil.escapeQuotes(item)).join("\', \'")}\')
+            UNION ALL
+            SELECT p.entity_id
+            FROM \`ecommerce\`.category_entity AS \`p\`
+            INNER JOIN \`cte\` ON \`p\`.parent = \`cte\`.entity_id
+        )
+        SELECT \`pca\`.product_id AS \`entity_id\`,
+        IF(\`pca\`.position IS NOT NULL, 100 + \`pca\`.position, 100) AS \`weight\`, \'category\' AS \`type\`
+        FROM \`ecommerce\`.product_category_assignment AS \`pca\`
+        INNER JOIN \`ecommerce\`.product_entity AS \`pe\` ON \`pe\`.entity_id = \`pca\`.product_id
+        WHERE \`pca\`.category_id IN(SELECT DISTINCT entity_id FROM \`cte\`)
+        `;
+    }
+    // ## search by product_id
+    let queryPID = ""
+    if (entity_ids && entity_ids.length > 0) {
+        queryPID =
+        `
+        SELECT \`pe\`.entity_id, 1000 AS \`weight\`, \'entity_id\' AS \`type\`
+        FROM \`ecommerce\`.\`product_entity\` AS \`pe\`
+        WHERE \`pe\`.entity_id IN (\'${entity_ids.map(item => mysqlutil.escapeQuotes(item)).join("\', \'")}\')
+        `;
+    }
+    // ## search by attribute refinements
+    let queryRefinement = "";
+    if (refinements && refinements.length > 0) {
+        let refinementComponentQueries = refinements.map(item => {
+            return `(\`attribute_id\`='${mysqlutil.escapeQuotes(item.attribute_id)}' AND \`value\` IN ('${item.value.map(item => mysqlutil.escapeQuotes(item.toString())).join("\', \'")}'))`
+        }).join(" OR ");
+        
+        queryRefinement =
+        `
+        SELECT entity_id, 10*${refinements.length} AS \`weight\`, \'attribute\' AS \`type\` FROM
+        (   SELECT entity_id, GROUP_CONCAT(attribute_id) AS attribute_ids FROM
+            (   SELECT \`eav\`.entity_id, \`eav\`.attribute_id
+                FROM \`ecommerce\`.\`product_eav_index\` AS \`eav\`
+                WHERE ${refinementComponentQueries}
+            ) AS \`alias\` GROUP BY entity_id
+        ) AS \`alias2\`
+        WHERE (${refinements.map(item => `FIND_IN_SET('${mysqlutil.escapeQuotes(item.attribute_id)}', \`alias2\`.attribute_ids)`).join(" AND ")})
+        `;
+    }
+    // ## search by search phrase
+    let querySearchPhrase = "";
+    if (searchPhrase) {
+        querySearchPhrase = fulltextSearch.generateFulltextSqlSearchProductEntity({ searchPhrase, searchDictionary });
+    }
+    // ## final assembled search query
+    let assembledQuery = [queryCID, queryPID, queryRefinement, querySearchPhrase]
+    .filter(item => (item != null && item != ""));
+    
+    if (assembledQuery.length == 0) {
+        assembledQuery = 
+        `
+        SELECT IF(parent, parent, entity_id) AS product_id, entity_id, 1 AS \`weight\`
+        FROM \`ecommerce\`.product_entity
+        `;
+    } else {
+        assembledQuery = 
+        `
+        SELECT IF(\`pe\`.parent, \`pe\`.parent, \`alias3\`.entity_id) AS \`product_id\`,
+        \`alias3\`.*
+        FROM (
+            ${assembledQuery.join(" UNION ALL ")}
+        ) AS \`alias3\`
+        LEFT JOIN \`ecommerce\`.product_entity AS \`pe\`
+        ON \`pe\`.entity_id = \`alias3\`.entity_id
+        `
+    }
+
+    return assembledQuery;
+};
+
+function searchConfigValidation ({ categories, entity_ids, refinements, searchPhrase }) {
     try {
         if (categories && Array.isArray(categories)) {
             categories.forEach(item => {
@@ -13,13 +95,13 @@ function createSearchQueryDB ({ categories, product_ids, refinements, searchPhra
         } else {
             categories = null;
         }
-        if (product_ids && Array.isArray(product_ids)) {
-            product_ids.forEach(item => {
+        if (entity_ids && Array.isArray(entity_ids)) {
+            entity_ids.forEach(item => {
                 if (typeof(item) != "string" || item.length == 0)
-                    throw new Error("Search config invalid: product_ids must be a list of none-empty string!");
+                    throw new Error("Search config invalid: entity_ids must be a list of none-empty string!");
             });
         } else {
-            product_ids = null;
+            entity_ids = null;
         }
         if (refinements && Array.isArray(refinements)) {
             refinements.forEach(item => {
@@ -44,107 +126,23 @@ function createSearchQueryDB ({ categories, product_ids, refinements, searchPhra
     } catch (err) {
         throw err
     }
-    // SEARCH entity_ids ORDERED BY RANKING
-    // ## search by category_id
-    let queryCID = "";
-    if (categories && categories.length > 0) {
-        queryCID =
-        `
-        WITH RECURSIVE \`cte\` (entity_id) AS (
-            SELECT entity_id
-            FROM \`ecommerce\`.category_entity
-            WHERE entity_id IN (\'${categories.map(item => mysqlutil.escapeQuotes(item)).join("\', \'")}\')
-            UNION ALL
-            SELECT p.entity_id
-            FROM \`ecommerce\`.category_entity AS \`p\`
-            INNER JOIN cte ON \`p\`.parent = \`cte\`.entity_id
-        )
-        SELECT \`pca\`.product_id AS \`entity_id\`,
-        IF(\`pca\`.position IS NOT NULL, 100 + \`pca\`.position, 100) AS \`weight\`, \'category\' AS \`type\`
-        FROM \`ecommerce\`.product_category_assignment AS \`pca\`
-        INNER JOIN \`ecommerce\`.product_entity AS \`pe\` ON \`pe\`.entity_id = \`pca\`.product_id
-        WHERE \`pca\`.category_id IN(SELECT DISTINCT entity_id FROM \`cte\`)
-        `;
-    }
-    // ## search by product_id
-    let queryPID = ""
-    if (product_ids && product_ids.length > 0) {
-        queryPID =
-        `
-        SELECT \`pe\`.entity_id, 1000 AS \`weight\`, \'entity_id\' AS \`type\`
-        FROM \`ecommerce\`.\`product_entity\` AS \`pe\`
-        WHERE \`pe\`.entity_id IN (\'${product_ids.map(item => mysqlutil.escapeQuotes(item)).join("\', \'")}\')
-        `;
-    }
-    // ## search by attribute refinements
-    let queryRefinement = "";
-    if (refinements && refinements.length > 0) {
-        let refinementComponentQueries = refinements.map(item => {
-            return `(\`attribute_id\`=\'${mysqlutil.escapeQuotes(item.attribute_id)}\' AND \`value\` IN (\'${item.value.map(item => mysqlutil.escapeQuotes(item.toString())).join("\', \'")}\'))`
-        }).join(" OR ");
-        
-        queryRefinement =
-        `
-        SELECT entity_id, 10*${refinements.length} AS \`weight\`, \'attribute\' AS \`type\` FROM
-        (   SELECT entity_id, GROUP_CONCAT(attribute_id) AS attribute_ids FROM
-            (   SELECT \`eav\`.entity_id, \`eav\`.attribute_id
-                FROM \`ecommerce\`.\`product_eav_varchar\` AS \`eav\`
-                WHERE ${refinementComponentQueries}
-            UNION ALL
-                SELECT \`eav\`.entity_id, \`eav\`.attribute_id
-                FROM \`ecommerce\`.\`product_eav_text\` AS \`eav\`
-                WHERE ${refinementComponentQueries}
-            UNION ALL
-                SELECT \`eav\`.entity_id, \`eav\`.attribute_id
-                FROM \`ecommerce\`.\`product_eav_int\` AS \`eav\`
-                WHERE ${refinementComponentQueries}
-            UNION ALL
-                SELECT \`eav\`.entity_id, \`eav\`.attribute_id
-                FROM \`ecommerce\`.\`product_eav_decimal\` AS \`eav\`
-                WHERE ${refinementComponentQueries}
-            UNION ALL
-                SELECT \`eav\`.entity_id, \`eav\`.attribute_id
-                FROM \`ecommerce\`.\`product_eav_datetime\` AS \`eav\`
-                WHERE ${refinementComponentQueries}
-            UNION ALL
-                SELECT \`eav\`.entity_id, \`eav\`.attribute_id
-                FROM \`ecommerce\`.\`product_eav_multi_value\` AS \`eav\`
-                WHERE ${refinementComponentQueries}
-            ) AS \`alias\` GROUP BY entity_id
-        ) AS \`alias2\`
-        WHERE (${refinements.map(item => `FIND_IN_SET(\'${mysqlutil.escapeQuotes(item.attribute_id)}\', \`alias2\`.attribute_ids)`).join(" AND ")})
-        `;
-    }
-    // ## search by search phrase
-    let querySearchPhrase = "";
-    if (searchPhrase) {
-        querySearchPhrase = fulltextSearch.generateFulltextSqlSearchProductEntity({ searchPhrase, searchDictionary });
-    }
-    // ## final assembled search query
-    let assembledQuery = [queryCID, queryPID, queryRefinement, querySearchPhrase]
-    .filter(item => (item != null && item != ""));
-    
-    if (assembledQuery.length == 0) {
-        assembledQuery = 
-        `
-        SELECT IF(parent, parent, entity_id) AS product_id, entity_id, 1 AS \`weight\`
-        FROM \`ecommerce\`.product_entity
-        `;
-    } else {
-        assembledQuery = 
-        `
-        SELECT IF(\`pe\`.parent, \`pe.parent\`, \`alias3\`.entity_id) AS \`product_id\`,
-        \`alias3\.*
-        FROM (
-            ${assembledQuery.join(" UNION ALL ")}
-        ) AS \`alias3\`
-        LEFT JOIN \`ecommerce\`.product_entity AS \`pe\`
-        ON \`pe\`.entity_id = \`alias3\`.entity_id
-        `
-    }
+}
 
-    return assembledQuery;
-};
+function searchByCategories (categories, DB) {
+
+}
+
+function searchByEntityIds (entity_ids, DB) {
+
+}
+
+function searchByRefinements (refinement, DB) {
+
+}
+
+function searchBySearchPhrase (searchPhrase, searchDictionary, DB) {
+
+}
 
 function createSearchQueryM24 ({ categories, product_ids, refinements, searchPhrase, searchDictionary }) {
     // SEARCH CONFIG VALIDATION
@@ -370,5 +368,9 @@ module.exports = {
     createSearchQueryDB,
     createSearchQueryM24,
     sortProductEntitiesBySignificantWeight,
-    finalFilterProductEntities
+    finalFilterProductEntities,
+    searchByCategories,
+    searchByEntityIds,
+    searchByRefinements,
+    searchBySearchPhrase
 }

@@ -24,6 +24,7 @@ var executes = [
     'schema_init.txt',
     'data_product_eav.txt',
     // 'data_product_eav_datetime.txt',
+    'data_product_category_assignment.txt',
     'data_product_eav_decimal.txt',
     'data_product_eav_int.txt',
     'data_product_eav_multi_value.txt',
@@ -89,7 +90,7 @@ async function buildProductEavIndex () {
     console.log("truncate table product_eav_index: ", truncate);
     let rawData = await selectProductsData();
     let products = modelizeProductsData(rawData);
-    let product_eav_index = mysqlutil.buildProductEavIndex(products);
+    let product_eav_index = mysqlutil.buildProductEavIndexJson(products);
     if (product_eav_index && product_eav_index.length > 0) {
         let sql =
         `
@@ -414,5 +415,5 @@ async function getProductsCache () {
 }
 
 // modelizeM24ProductsData()
-// initEcommerceDB()
+initEcommerceDB()
 
