@@ -27,7 +27,6 @@ async function searchDB ({ categories, entity_ids, refinements, searchPhrase, se
     }
 
     let assembledQuery = searchutils.createSearchQueryDB({ categories, entity_ids, refinements, searchPhrase, searchDictionary });
-    console.log(assembledQuery);
     let result = await DB.promiseQuery(assembledQuery);
     let end = Date.now();
     console.log("search query took: ", end - start, " ms");
@@ -36,14 +35,14 @@ async function searchDB ({ categories, entity_ids, refinements, searchPhrase, se
 };
 
 let searchConfigDB = {
-    // "categories": ["earbud", "charge_cable"],
-    // "entity_ids": ["PR001", "PR003", "PR004"],
-    // "refinements": [
-    // {
-    //     "attribute_id": "color",
-    //     "value": ["Đỏ_#eb3458", "Lam_#eb3458"]
-    // }],
-    // "searchPhrase": "true wireless earbud",
+    "categories": ["earbud", "charge_cable"],
+    "entity_ids": ["PR001", "PR003", "PR004"],
+    "refinements": [
+    {
+        "attribute_id": "color",
+        "value": ["Đỏ_#eb3458", "Lam_#eb3458"]
+    }],
+    "searchPhrase": "true wireless earbud",
     "searchDictionary": {
         "synonyms": [["SẠC DỰ PHÒNG", "POWERBANK", "PIN DỰ PHÒNG"], ["CÁP SẠC", "DÂY SẠC"], ["IPHONE", "LIGHTNING"], ["ANDROID", "SAMSUNG"]]
     },

@@ -4,4 +4,4 @@ VALUES
 # General
 ('PR001', 'earbud', 0),
 ('PR002', 'charge_cable', 0),
-('PR003', 'charge_cable', 0)
+('PR003', 'charge_cable', 10)
