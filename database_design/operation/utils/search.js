@@ -84,23 +84,26 @@ function createSearchQueryDB ({ categories, entity_ids, refinements, searchPhras
 
 function searchConfigValidation ({ categories, entity_ids, refinements, searchPhrase }) {
     try {
-        if (categories && Array.isArray(categories)) {
+        let required = [];
+        if (categories && Array.isArray(categories) && categories.length > 0) {
             categories.forEach(item => {
                 if (typeof(item) != "string" || item.length == 0)
                     throw new Error("Search config invalid: categories must be a list of none-empty string!");
             });
-        } else {
-            categories = null;
+            required.push("category");
+        } else if (categories && !Array.isArray(categories)) {
+            throw new Error("Search config invalid: categories must be an array!");
         }
-        if (entity_ids && Array.isArray(entity_ids)) {
+        if (entity_ids && Array.isArray(entity_ids) && entity_ids.length > 0) {
             entity_ids.forEach(item => {
                 if (typeof(item) != "string" || item.length == 0)
                     throw new Error("Search config invalid: entity_ids must be a list of none-empty string!");
             });
-        } else {
-            entity_ids = null;
+            required.push("entity_id");
+        } else if (entity_ids && !Array.isArray(entity_ids)) {
+            throw new Error("Search config invalid: entity_ids must be an array!");
         }
-        if (refinements && Array.isArray(refinements)) {
+        if (refinements && Array.isArray(refinements) && refinements.length > 0) {
             refinements.forEach(item => {
                 if (typeof(item.attribute_id) != "string" || item.attribute_id.length == 0)
                     throw new Error("Search config invalid: refinement attribute_id must be a none-empty string!");
@@ -111,15 +114,19 @@ function searchConfigValidation ({ categories, entity_ids, refinements, searchPh
                         throw new Error("Search config invalid: refinement value must be a list of string or number!")
                 })
             });
-        } else {
-            refinements = null;
+            required.push("attribute");
+        } else if (refinements && !Array.isArray(refinements)) {
+            throw new Error("Search config invalid: refinements must be an array!")
         }
         if (
             (searchPhrase != null && typeof(searchPhrase) != "string") ||
             (typeof(searchPhrase) == "string" && searchPhrase.trim().length == 0)
         ) {
             throw new Error("Search config invalid: searchPhrase must be none-empty string!")
-        }
+        } else if (searchPhrase) {
+            required.push("name");
+        };
+        return required;
     } catch (err) {
         throw err
     }
@@ -212,74 +219,43 @@ async function searchBySearchPhrase ({ searchPhrase, searchDictionary, DB }) {
     }
 }
 
-function sortProductEntitiesBySignificantWeight (rowData) {
-    let found_products = [];
-    rowData.forEach(row => {
-        let found_match = found_products.find(item => item.product_id == row.product_id);
-        if(!found_match){
-            found_products.push({
-                product_id: row.product_id,
-                weight: row.weight
-            })
-        }else{
-            found_match.weight += row.weight;
-        }
+function finalFilterProductEntities ({ products, required }) {
+    for (let i = 0; i < products.length; i++) {
+        let product = products[i];
+        let isPassed = true;
+        for (let j = 0; j < required.length; j++) {
+            let match = product.__items.find(search_type => search_type.type == required[j]);
+            if (!match) {
+                isPassed= false;
+                break;
+            }
+        };
+        if (!isPassed) {
+            products.splice(i, 1);
+            i -= 1;
+        };
+    };
+    return products;
+}
+
+function sortProductsBySignificantWeight (products) {
+    products.forEach(product => {
+        product.weight = 0;
+        product.__items.forEach(search_type => {
+            product.weight += search_type.weight;
+        });
+        delete product.__items;
     })
-    found_products.sort((a, b) => {
+    products.sort((a, b) => {
         return b.weight - a.weight;
     });
-    return found_products;
+    return products;
 };
-
-function finalFilterProductEntities (grouped_data) {
-    let by_all = grouped_data.find(group => group.type == "all");
-    let by_entity_id = grouped_data.find(group => group.type == "entity_id");
-    let by_category = grouped_data.find(group => group.type == "category");
-    let by_name = grouped_data.find(group => group.type == "name");
-    let by_attribute = grouped_data.find(group => group.type == "attribute");
-    let result = [];
-    // concat all records first
-    if (by_all && by_all.__items) {
-        console.log("yes ", 1)
-        result = result.concat(by_all.__items);
-    };
-    if (by_entity_id && by_entity_id.__items) {
-        console.log("yes ", 2)
-        result = result.concat(by_entity_id.__items);
-    };
-    if (by_category && by_category.__items) {
-        console.log("yes ", 3)
-        result = result.concat(by_category.__items);
-    };
-    if (by_name && by_name.__items) {
-        console.log("yes ", 4)
-        result = result.concat(by_name.__items);
-    };
-    if (by_attribute && by_attribute.__items) {
-        console.log("yes ", 5)
-        result = result.concat(by_attribute.__items);
-    };
-    // filter out all records that match neither entity_id nor category nor name nor refinements
-    if (by_entity_id && by_entity_id.__items) {
-        result = result.filter(item => by_entity_id.__items.find(m_item => m_item.product_id == item.product_id));
-    };
-    if (by_category && by_category.__items) {
-        result = result.filter(item => by_category.__items.find(m_item => m_item.product_id == item.product_id));
-    };
-    if (by_name && by_name.__items) {
-        result = result.filter(item => by_name.__items.find(m_item => m_item.product_id == item.product_id));
-    };
-    if (by_attribute && by_attribute.__items) {
-        result = result.filter(item => by_attribute.__items.find(m_item => m_item.product_id == item.product_id));
-    };
-    result = sortProductEntitiesBySignificantWeight(result);
-    return result;
-}
 
 module.exports = {
     createSearchQueryDB,
-    sortProductEntitiesBySignificantWeight,
     finalFilterProductEntities,
+    sortProductsBySignificantWeight,
     searchConfigValidation,
     searchByCategories,
     searchByEntityIds,

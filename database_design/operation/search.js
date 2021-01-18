@@ -10,7 +10,7 @@ var sqlDBConfig = {
 
 async function searchDB ({ categories, entity_ids, refinements, searchPhrase, searchDictionary, page }) {
     let start = Date.now();
-    searchutils.searchConfigValidation({ categories, entity_ids, refinements, searchPhrase });
+    let required = searchutils.searchConfigValidation({ categories, entity_ids, refinements, searchPhrase });
     const DB = await mysqlutil.generateConnection(sqlDBConfig);
     if (refinements && refinements.length > 0) {
         // validate refinements contains searchable attributes only
@@ -27,11 +27,19 @@ async function searchDB ({ categories, entity_ids, refinements, searchPhrase, se
     }
 
     let assembledQuery = searchutils.createSearchQueryDB({ categories, entity_ids, refinements, searchPhrase, searchDictionary });
-    let result = await DB.promiseQuery(assembledQuery);
+    let rowData = await DB.promiseQuery(assembledQuery);
     let end = Date.now();
     console.log("search query took: ", end - start, " ms");
+    let products = mysqlutil.groupByAttribute({
+        rawData: rowData,
+        groupBy: "product_id"
+    })
+    products = searchutils.finalFilterProductEntities({ products, required });
+    products = searchutils.sortProductsBySignificantWeight(products);
+    end = Date.now();
+    console.log("search query took: ", end - start, " ms");
     DB.end();
-    return result;
+    return products;
 };
 
 let searchConfigDB = {
