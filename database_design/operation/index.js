@@ -83,6 +83,25 @@ function centralizeAttributeMetaData (products) {
     return data;
 }
 
+async function buildProductEavIndex () {
+    const DB = await mysqlutil.generateConnection(sqlDBConfig);
+    let truncate = await DB.promiseQuery(`TRUNCATE TABLE \`ecommerce\`.product_eav_index`);
+    console.log("truncate table product_eav_index: ", truncate);
+    let rawData = await selectProductsData();
+    let products = modelizeProductsData(rawData);
+    let product_eav_index = mysqlutil.buildProductEavIndex(products);
+    if (product_eav_index && product_eav_index.length > 0) {
+        let sql =
+        `
+        INSERT INTO \`ecommerce\`.product_eav_index (entity_id, product_id, attribute_id, value)
+        VALUES ${product_eav_index.map(eav => `('${mysqlutil.escapeQuotes(eav.entity_id)}', '${mysqlutil.escapeQuotes(eav.product_id)}', '${mysqlutil.escapeQuotes(eav.attribute_id)}', '${mysqlutil.escapeQuotes(eav.value)}')`).join(", ")}
+        `;
+        let result = await DB.promiseQuery(sql);
+        console.log("build product_eav_index success: ", result);
+    };
+    DB.end();
+}
+
 async function initEcommerceDB ()  {
     try {
         let start = Date.now()
@@ -99,6 +118,7 @@ async function initEcommerceDB ()  {
         for (let i = 0; i < sqls.length; i++) {
             await DB.promiseQuery(sqls[i]);
         }
+        await buildProductEavIndex();
         let end = Date.now();
         console.log("DB init took ", end - start, " ms");
         DB.end();
@@ -374,13 +394,6 @@ async function getProductsDB () {
     // await fs.writeJSON("../DBproducts.json", products);
 }
 
-async function buildProductEavIndex () {
-    let rawData = await selectProductsData();
-    let products = modelizeProductsData(rawData);
-    let product_eav_index = mysqlutil.buildProductEavIndex(products);
-    console.log(product_eav_index);
-}
-
 async function test () {
     let products = await modelizeM24ProductsData();
     let start = Date.now();
@@ -401,5 +414,5 @@ async function getProductsCache () {
 }
 
 // modelizeM24ProductsData()
-buildProductEavIndex()
+// initEcommerceDB()
 

@@ -19,7 +19,7 @@ CREATE TABLE `ecommerce`.`product_entity` (
 CREATE TABLE `ecommerce`.`product_category_assignment` (
   `product_id` VARCHAR(50) NOT NULL,
   `category_id` VARCHAR(50) NOT NULL,
-  `position` INT NOT NULL DEFAULT 0
+  `position` INT NOT NULL DEFAULT 0,
   PRIMARY KEY (`product_id`, `category_id`));
 
 ###
@@ -55,7 +55,7 @@ CREATE TABLE `ecommerce`.`product_eav_index` (
   `product_id` VARCHAR(50) NOT NULL,
   `attribute_id` VARCHAR(50) NOT NULL,
   `value`  VARCHAR(255) NOT NULL,
-  PRIMARY KEY (`entity_id`, `product_id`, `attribute_id`, `value`));
+  PRIMARY KEY (`product_id`, `attribute_id`, `value`));
 
 ###
 CREATE TABLE `ecommerce`.`product_eav_int` (
