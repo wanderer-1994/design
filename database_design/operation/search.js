@@ -8,12 +8,6 @@ var sqlDBConfig = {
     password: "tkh170294"
 }
 
-var sqlM24Config = {
-    host: "localhost",
-    port: "3307",
-    user: "root",
-}
-
 async function searchDB ({ categories, entity_ids, refinements, searchPhrase, searchDictionary, page }) {
     let start = Date.now();
     searchutils.searchConfigValidation({ categories, entity_ids, refinements, searchPhrase });
@@ -41,27 +35,6 @@ async function searchDB ({ categories, entity_ids, refinements, searchPhrase, se
     return result;
 };
 
-async function searchM24 ({ categories, product_ids, refinements, searchPhrase, searchDictionary, page }) {
-    const M24 = await mysqlutil.generateConnection(sqlM24Config);
-    let start = Date.now();
-    // search product_entities & product_ids
-    let assembledQuery = searchutils.createSearchQueryM24({ categories, product_ids, refinements, searchPhrase, searchDictionary });
-    let rowData = await M24.promiseQuery(assembledQuery);
-    let grouped_data = mysqlutil.groupByAttribute({
-        rawData: rowData,
-        groupBy: "type"
-    })
-    grouped_data.forEach(search_type => {
-        search_type.__items = searchutils.sortProductEntitiesBySignificantWeight(search_type.__items)
-    });
-    let final_product_entities = searchutils.finalFilterProductEntities(grouped_data);
-    // search all product data by product_ids
-    let end = Date.now();
-    console.log("search query took: ", end - start, " ms");
-    M24.end();
-    return result;
-};
-
 let searchConfigDB = {
     // "categories": ["earbud", "charge_cable"],
     // "entity_ids": ["PR001", "PR003", "PR004"],
@@ -74,25 +47,6 @@ let searchConfigDB = {
     "searchDictionary": {
         "synonyms": [["SẠC DỰ PHÒNG", "POWERBANK", "PIN DỰ PHÒNG"], ["CÁP SẠC", "DÂY SẠC"], ["IPHONE", "LIGHTNING"], ["ANDROID", "SAMSUNG"]]
     },
-    "page": 2
-};
-
-let searchConfigM24 = {
-    // "product_ids": ["53", "77"],
-    // "categories": ["8"],
-    "refinements": [{
-        "attribute_id": "73",
-        "value": ["Dash Digital Watch", "Bolo Sport Watch", "Didi Sport Watch"]
-    },
-    {
-        "attribute_id": "106",
-        "value": ["container2"]
-    },
-    {
-        "attribute_id": "89",
-        "value": ["/m/g/mg02-bk-0.jpg", "/w/g/wg01-bk-0.jpg", "/w/g/wg02-bk-0.jpg"]
-    }],
-    "searchPhrase":  "Bolo Sport Watch Dash Digital",
     "page": 2
 };
 

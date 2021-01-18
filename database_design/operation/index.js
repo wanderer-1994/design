@@ -12,9 +12,6 @@ const productSelectedFields = [
     "frontend_input",
     "frontend_label"
 ];
-const productInheritFieldsM24 = ["product_id", "type_id"];
-const productEntityInheritFieldsM24 = ["product_id", "entity_id", "sku", "type_id"];
-const attributeInheritFieldsM24 = ["attribute_code", "attribute_id", "value", "frontend_input", "frontend_label"];
 const productInheritFields = ["product_id", "type_id"];
 const productEntityInheritFields = ["product_id", "entity_id", "type_id"];
 const attributeInheritFields = ["attribute_id", "value", "label", "html_type", "data_type", "validation", "is_super", "is_system", "unit"];
@@ -40,12 +37,6 @@ var sqlDBConfig = {
     user: "root",
     password: "tkh170294"
 }
-
-var sqlM24Config = {
-    host: "localhost",
-    port: "3307",
-    user: "root",
-};
 
 function centralizeAttributeMetaData (products) {
     let data = {
@@ -123,127 +114,6 @@ async function initEcommerceDB ()  {
         let end = Date.now();
         console.log("DB init took ", end - start, " ms");
         DB.end();
-    } catch (error) {
-        throw error;
-    }
-}
-
-async function selectM24MassiveData () {
-    try {
-        const M24 = await mysqlutil.generateConnection(sqlM24Config);
-        await M24.promiseQuery("USE `magento24`;");
-        let query = `SELECT \`pre\`.*, \`eav\`. frontend_input, \`eav\`. attribute_code, \`eav\`. frontend_label FROM (
-            SELECT IF(\`splk\`.parent_id IS NOT NULL, \`splk\`.parent_id, \`p\`.entity_id) as product_id, \`p\`.entity_id, \`p\`.sku, \`p\`.type_id, \`varchar\`.attribute_id, \`varchar\`.value
-            FROM \`catalog_product_entity\` as \`p\`
-            LEFT JOIN \`catalog_product_super_link\` as \`splk\` ON \`splk\`.product_id = \`p\`.entity_id
-            INNER JOIN \`catalog_product_entity_varchar\` as \`varchar\` ON \`varchar\`.entity_id = \`p\`.entity_id
-            WHERE \`p\`.entity_id BETWEEN 1 AND 3
-        UNION
-            SELECT IF(\`splk\`.parent_id IS NOT NULL, \`splk\`.parent_id, \`p\`.entity_id) as product_id, \`p\`.entity_id, \`p\`.sku, \`p\`.type_id, \`text\`.attribute_id, \`text\`.value
-            FROM \`catalog_product_entity\` as \`p\`
-            LEFT JOIN \`catalog_product_super_link\` as \`splk\` ON \`splk\`.product_id = \`p\`.entity_id
-            INNER JOIN \`catalog_product_entity_text\` as \`text\` ON \`text\`.entity_id = \`p\`.entity_id
-            WHERE \`p\`.entity_id BETWEEN 1 AND 3
-        UNION
-            SELECT IF(\`splk\`.parent_id IS NOT NULL, \`splk\`.parent_id, \`p\`.entity_id) as product_id, \`p\`.entity_id, \`p\`.sku, \`p\`.type_id, \`int\`.attribute_id, \`int\`.value
-            FROM \`catalog_product_entity\` as \`p\`
-            LEFT JOIN \`catalog_product_super_link\` as \`splk\` ON \`splk\`.product_id = \`p\`.entity_id
-            INNER JOIN \`catalog_product_entity_int\` as \`int\` ON \`int\`.entity_id = \`p\`.entity_id
-            WHERE \`p\`.entity_id BETWEEN 1 AND 3
-        UNION
-            SELECT IF(\`splk\`.parent_id IS NOT NULL, \`splk\`.parent_id, \`p\`.entity_id) as product_id, \`p\`.entity_id, \`p\`.sku, \`p\`.type_id, \`decimal\`.attribute_id, \`decimal\`.value
-            FROM \`catalog_product_entity\` as \`p\`
-            LEFT JOIN \`catalog_product_super_link\` as \`splk\` ON \`splk\`.product_id = \`p\`.entity_id
-            INNER JOIN \`catalog_product_entity_decimal\` as \`decimal\` ON \`decimal\`.entity_id = \`p\`.entity_id
-            WHERE \`p\`.entity_id BETWEEN 1 AND 3
-        UNION
-            SELECT IF(\`splk\`.parent_id IS NOT NULL, \`splk\`.parent_id, \`p\`.entity_id) as product_id, \`p\`.entity_id, \`p\`.sku, \`p\`.type_id, \`datetime\`.attribute_id, \`datetime\`.value
-            FROM \`catalog_product_entity\` as \`p\`
-            LEFT JOIN \`catalog_product_super_link\` as \`splk\` ON \`splk\`.product_id = \`p\`.entity_id
-            INNER JOIN \`catalog_product_entity_datetime\` as \`datetime\` ON \`datetime\`.entity_id = \`p\`.entity_id
-            WHERE \`p\`.entity_id BETWEEN 1 AND 3
-        ) AS \`pre\`
-        INNER JOIN \`eav_attribute\` as \`eav\` ON \`pre\`.attribute_id=\`eav\`.attribute_id ORDER BY \`pre\`.entity_id ASC`;
-        let start = Date.now();
-        let result = await M24.promiseQuery(query);
-        let end = Date.now();
-        console.log("query took: ", end - start, " ms");
-        // await fs.writeJSON("../test.json", result);
-        M24.end();
-        return result;
-    } catch (error) {
-        throw error;
-    }
-};
-
-async function modelizeM24ProductsData () {
-    try {
-        let rawData = await selectM24MassiveData();
-        let start = Date.now();
-        let products = mysqlutil.groupByAttribute({
-            rawData: rawData,
-            groupBy: "product_id"
-        });
-        products.forEach((product, index) => {
-            let self = product.__items.find(line_item => line_item.entity_id == product.product_id);
-            if(!self){
-                console.warn("Product ", product.product_id, " has no parent. Hence is ignored!");
-                products[index] = null;
-                return;
-            }
-            product.type_id = self.type_id;
-            product.__items = mysqlutil.groupByAttribute({
-                rawData: product.__items,
-                groupBy: "entity_id"
-            });
-            switch (product.type_id) {
-                case "simple": case "bundle": case "grouped": case "downloadable":
-                    product.self = product.__items.find(line_item => line_item.entity_id == product.product_id);
-                    break;
-                case "configurable":
-                    product.parent = product.__items.find(line_item => line_item.entity_id == product.product_id);
-                    product.variants = product.__items.filter(line_item => line_item.entity_id != product.product_id);
-                    break;
-                default:
-                    break;
-            };
-            product.__items.forEach(product_entity => {
-                if(product_entity.__items[0]){
-                    productEntityInheritFieldsM24.forEach(field_item => {
-                        product_entity[field_item] = product_entity.__items[0][field_item] || product_entity[field_item];
-                    })
-                }
-                product_entity.attributes = mysqlutil.groupByAttribute({
-                    rawData: product_entity.__items,
-                    groupBy: "attribute_code",
-                    nullExcept: [null, ""]
-                });
-                product_entity.attributes.forEach(attr_item => {
-                    if(attr_item.__items[0]){
-                        if("__items" in attr_item.__items[0]){
-                            throw new Error("Invalid property name \"__item\". \"__item\" is framework preserved key.")
-                        }
-                        attributeInheritFieldsM24.forEach(field_item => {
-                            attr_item[field_item] = attr_item.__items[0][field_item] || attr_item[field_item];
-                        })
-                    }
-                    if(multivalueAttributes.indexOf(attr_item.frontend_input) != -1){
-                        attr_item.value = [];
-                        attr_item.__items.forEach(value_item => {
-                            attr_item.value.push(value_item.value);
-                        })
-                    }
-                    delete attr_item.__items;
-                });
-                delete product_entity.__items;
-            });
-            delete product.__items;
-        })
-        products = products.filter(product => product != null);
-        let end = Date.now();
-        console.log("product processing took: ", end - start, " ms");
-        return products;
-        // await fs.writeJSON("../test2.json", products);
     } catch (error) {
         throw error;
     }
@@ -395,15 +265,6 @@ async function getProductsDB () {
     // await fs.writeJSON("../DBproducts.json", products);
 }
 
-async function test () {
-    let products = await modelizeM24ProductsData();
-    let start = Date.now();
-    let data = centralizeAttributeMetaData(products);
-    let end = Date.now();
-    console.log("centralize took ", end - start, " ms");
-    // await fs.writeJSON("../testCentralizeAttrs.json", data);
-}
-
 async function getProductsCache () {
     let start = Date.now();
     let products = await fs.readFile("../test2.json", "utf8");
@@ -414,6 +275,5 @@ async function getProductsCache () {
     fs.re
 }
 
-// modelizeM24ProductsData()
 initEcommerceDB()
 
