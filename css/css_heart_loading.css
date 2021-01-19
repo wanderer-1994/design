@@ -130,27 +130,7 @@ body {
     top: -23px;
   }
 }
-@keyframes piece-4 {
-  0%, 10%, 90%, 100% {
-    height: 10px;
-    top: -5px;
-  }
-  45%, 55% {
-    height: 94px;
-    top: -23px;
-  }
-}
 @-webkit-keyframes piece-3 {
-  0%, 10%, 90%, 100% {
-    height: 10px;
-    top: -5px;
-  }
-  45%, 55% {
-    height: 90px;
-    top: -31px;
-  }
-}
-@keyframes piece-3 {
   0%, 10%, 90%, 100% {
     height: 10px;
     top: -5px;
@@ -170,16 +150,6 @@ body {
     top: -37px;
   }
 }
-@keyframes piece-2 {
-  0%, 10%, 90%, 100% {
-    height: 10px;
-    top: -5px;
-  }
-  45%, 55% {
-    height: 80px;
-    top: -37px;
-  }
-}
 @-webkit-keyframes piece-1 {
   0%, 10%, 90%, 100% {
     height: 10px;
@@ -190,27 +160,7 @@ body {
     top: -31px;
   }
 }
-@keyframes piece-1 {
-  0%, 10%, 90%, 100% {
-    height: 10px;
-    top: -5px;
-  }
-  45%, 55% {
-    height: 60px;
-    top: -31px;
-  }
-}
 @-webkit-keyframes piece-0 {
-  0%, 10%, 90%, 100% {
-    height: 10px;
-    top: -5px;
-  }
-  45%, 55% {
-    height: 30px;
-    top: -15px;
-  }
-}
-@keyframes piece-0 {
   0%, 10%, 90%, 100% {
     height: 10px;
     top: -5px;
