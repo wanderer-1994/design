@@ -10,40 +10,53 @@ body {
 }
 
 .category {
-    
-}
-
-.category .cat-banner {
-    position: relative;
     user-select: none;
 }
 
-.category .cat-banner .cat-title {
+.category .cat-title {
     background-color: #171936;
     color: #dedede;
     font-family: sans-serif;
     font-size: 30px;
 }
 
-.category .cat-banner .cat-description {
+.category .cat-description {
     background-color: #171936;
     color: #ffffff90;
     padding-bottom: 150px;
 }
 
-.category .cat-banner .cat-image {
+.category .cat-image {
     margin-top: -120px;
     margin-left: 5px;
     width: calc(100% - 10px);
 }
 
-.category .cat-banner .cat-image img {
-    border-radius: 30px 5px 30px 5px;
+.category .cat-image img {
     max-width: 100%;
     max-height: 100%;
     min-height: 200px;
     box-shadow: 0px 0px 10px #a4a4a4;
     pointer-events: none;
+}
+
+.category .sub-categories {
+    position: relative;
+    margin-left: 10px;
+    margin-top: -210px;
+    width: calc(100% - 20px);
+    height: 200px;
+    background-color: #ababab50;
+    border-radius: 1px;
+}
+
+.category .sub-categories .item {
+    height: 150px;
+    width: 150px;
+    box-shadow: 0px 0px 5px #ababab;
+    display: inline-block;
+    border-radius: 50%;
+    margin: 25px;
 }
 
 .prod-list {

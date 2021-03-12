@@ -13,7 +13,7 @@
             })
             // For Mobile - ontouchmove event handles all
             $(target).on("touchstart.draggable", function (e) {
-                e.preventDefault;
+                e.preventDefault();
                 let transition = $(target).css("transition");
                 $(target).data("transition", transition);
             });
@@ -23,7 +23,7 @@
                 $(target).data("transition", "");
             });
             $(target).on("touchmove.draggable", function (e) {
-                e.preventDefault;
+                e.preventDefault();
                 if(typeof(f_dragWhen) == "function" && !f_dragWhen()) {
                     return;
                 }
